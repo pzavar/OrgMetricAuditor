@@ -29,7 +29,7 @@ and recommend eliminating vanity metrics that don't drive decision-making.
 """)
 
 # Sidebar
-st.sidebar.image("https://images.unsplash.com/photo-1542744173-05336fcc7ad4", use_column_width=True)
+st.sidebar.image("https://images.unsplash.com/photo-1542744173-05336fcc7ad4", use_container_width=True)
 st.sidebar.title("KPI Audit Controls")
 
 # Data upload
@@ -289,7 +289,7 @@ if df is not None:
                                      "Score", "Classification", "Interpretation_Notes"]].copy()
         dept_table = dept_table.sort_values(by="Score", ascending=False)
         
-        st.dataframe(dept_table.style.applymap(color_classification, subset=['Classification']), 
+        st.dataframe(dept_table.style.map(color_classification, subset=['Classification']), 
                    use_container_width=True)
         
     with tab4:
