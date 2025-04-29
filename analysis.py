@@ -56,13 +56,14 @@ def calculate_metric_scores(df, weights=None):
     
     return scores
 
-def classify_metrics(df):
+def classify_metrics(df, threshold=5):
     """
     Classify metrics into High Impact or Vanity with stricter criteria.
     Only 3-6 metrics should be classified as truly high impact.
     
     Args:
         df: DataFrame with preprocessed metric data
+        threshold: Value score threshold for high impact classification (default: 5)
         
     Returns:
         Dictionary with metric index as key and classification as value
@@ -105,8 +106,8 @@ def classify_metrics(df):
         if "unclear" in row["Interpretation_Notes"].lower():
             value_score -= 1
         
-        # Classify based on strict value score
-        if value_score >= 5:  # Very strict threshold for high impact
+        # Classify based on strict value score and the adjustable threshold
+        if value_score >= threshold:  # Adjustable threshold for high impact
             classifications[idx] = "High Impact"
         else:
             classifications[idx] = "Vanity"  # Simplify to just two categories

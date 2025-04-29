@@ -102,19 +102,85 @@ if df is not None:
         )
         filtered_df = filtered_df[search_mask]
     
-    # Add analyzer options - with stricter defaults
-    st.sidebar.header("4. Analysis Options")
-    score_weights = {
-        "Used_in_Decision_Making": st.sidebar.slider("Weight for Decision Making Usage", 0.0, 1.0, 0.5, 0.1),
-        "Visible_in_Dashboard": st.sidebar.slider("Weight for Dashboard Visibility", 0.0, 1.0, 0.1, 0.1),
-        "Executive_Requested": st.sidebar.slider("Weight for Executive Request", 0.0, 1.0, 0.1, 0.1),
-        "Review_Score": st.sidebar.slider("Weight for Review Frequency", 0.0, 1.0, 0.15, 0.05),
-        "Usage_Score": st.sidebar.slider("Weight for Decision Usage", 0.0, 1.0, 0.15, 0.05)
+    # Define default weights
+    default_weights = {
+        "Used_in_Decision_Making": 0.5,
+        "Visible_in_Dashboard": 0.1,
+        "Executive_Requested": 0.1,
+        "Review_Score": 0.15,
+        "Usage_Score": 0.15
     }
     
-    # Run analysis
+    # Use session state for weights to persist between interactions
+    if 'weights' not in st.session_state:
+        st.session_state.weights = default_weights.copy()
+    
+    # Add settings expander (hidden by default)
+    st.sidebar.header("4. Advanced Settings")
+    with st.sidebar.expander("Analysis Settings", expanded=False):
+        # Create a form for the settings
+        with st.form(key="analysis_settings"):
+            st.write("#### Metric Evaluation Weights")
+            st.write("Adjust how much each factor contributes to the metric value score.")
+            
+            # Create sliders for weights
+            temp_weights = {}
+            temp_weights["Used_in_Decision_Making"] = st.slider(
+                "Weight for Decision Making Usage", 
+                0.0, 1.0, st.session_state.weights["Used_in_Decision_Making"], 0.1,
+                help="How important is it that a metric is used in actual decision making?"
+            )
+            
+            temp_weights["Visible_in_Dashboard"] = st.slider(
+                "Weight for Dashboard Visibility", 
+                0.0, 1.0, st.session_state.weights["Visible_in_Dashboard"], 0.1,
+                help="How important is it that a metric appears in dashboards?"
+            )
+            
+            temp_weights["Executive_Requested"] = st.slider(
+                "Weight for Executive Request", 
+                0.0, 1.0, st.session_state.weights["Executive_Requested"], 0.1,
+                help="How important is executive sponsorship for a metric?"
+            )
+            
+            temp_weights["Review_Score"] = st.slider(
+                "Weight for Review Frequency", 
+                0.0, 1.0, st.session_state.weights["Review_Score"], 0.05,
+                help="How much does regular review matter?"
+            )
+            
+            temp_weights["Usage_Score"] = st.slider(
+                "Weight for Decision Usage", 
+                0.0, 1.0, st.session_state.weights["Usage_Score"], 0.05,
+                help="How much does recency of use in decision-making matter?"
+            )
+            
+            st.write("##### Classification Thresholds")
+            threshold = st.slider(
+                "High Impact Threshold", 
+                3, 6, 5, 1,
+                help="How strict should the classification be? Higher values mean fewer metrics will be considered high-impact."
+            )
+            
+            # Submit button for the form
+            submit_button = st.form_submit_button(label="Apply & Save Settings")
+            
+            if submit_button:
+                st.session_state.weights = temp_weights.copy()
+                st.session_state.threshold = threshold
+                st.success("Settings updated! Analysis will reflect your changes.")
+    
+    # Get weights from session state
+    score_weights = st.session_state.weights
+    
+    # Store threshold in session state if not already there
+    if 'threshold' not in st.session_state:
+        st.session_state.threshold = 5  # Default threshold
+    
+    # Run analysis with current weights
     metric_scores = calculate_metric_scores(filtered_df, weights=score_weights)
-    classified_metrics = classify_metrics(filtered_df)
+    # Pass threshold to classify_metrics
+    classified_metrics = classify_metrics(filtered_df, threshold=st.session_state.threshold)
     
     # Check if metric_scores is empty (which can happen with empty filtered data)
     if not metric_scores:
