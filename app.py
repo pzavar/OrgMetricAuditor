@@ -80,16 +80,33 @@ if df is not None:
     departments = ["All Departments"] + sorted(df["Department"].unique().tolist())
     selected_department = st.sidebar.selectbox("Filter by Department", departments)
     
-    # Metric type filter
-    metric_types = ["All Metrics"] + sorted(df["Metric_Name"].unique().tolist())
+    # Get unique metric types across the dataset
+    unique_metrics = sorted(df["Metric_Name"].unique().tolist())
+    metric_types = ["All Metrics"] + unique_metrics
     selected_metric = st.sidebar.selectbox("Filter by Metric Type", metric_types)
     
-    # Filter data based on selection
+    # Filter data based on selection - apply department filter first
     filtered_df = df.copy()
     if selected_department != "All Departments":
         filtered_df = filtered_df[filtered_df["Department"] == selected_department]
+    
+    # Then apply metric type filter if selected
     if selected_metric != "All Metrics":
         filtered_df = filtered_df[filtered_df["Metric_Name"] == selected_metric]
+        
+    # Show filter status
+    if selected_department != "All Departments" or selected_metric != "All Metrics":
+        filter_status = []
+        if selected_department != "All Departments":
+            filter_status.append(f"Department: {selected_department}")
+        if selected_metric != "All Metrics":
+            filter_status.append(f"Metric: {selected_metric}")
+        
+        st.sidebar.info(f"Filtering by: {', '.join(filter_status)}")
+        if len(filtered_df) == 0:
+            st.sidebar.warning("No metrics match your filter criteria. Try adjusting filters.")
+        else:
+            st.sidebar.success(f"Showing {len(filtered_df)} of {len(df)} metrics")
     
     # Search functionality
     st.sidebar.header("3. Search")
@@ -200,61 +217,232 @@ if df is not None:
     # Add classification
     analysis_df["Classification"] = pd.Series(classified_metrics)
     
-    # Main content area - simplified to 2 tabs
-    tab1, tab2 = st.tabs(["Analysis", "Metrics Details"])
+    # Main content area - Using 3 tabs: Analysis, Visualizations, and Metrics Details
+    tab1, tab2, tab3 = st.tabs(["Analysis", "Visualizations", "Metrics Details"])
     
+    # Calculate the metrics totals and get the required dataframes
+    total_metrics = len(analysis_df)
+    high_impact = sum(analysis_df["Classification"] == "High Impact")
+    vanity = sum(analysis_df["Classification"] == "Vanity")
+    high_impact_pct = high_impact/total_metrics
+    vanity_pct = vanity/total_metrics
+    
+    # Get top metrics and vanity metrics
+    top_metrics_df = get_top_metrics(analysis_df, classified_metrics, metric_scores)
+    vanity_metrics_df = get_vanity_metrics(analysis_df, classified_metrics, metric_scores, limit=5)
+    
+    # Find potential duplicate metrics
+    duplicate_metrics = find_duplicate_metrics(filtered_df)
+    
+    # Tab 1: Professional Analysis Summary and Detailed Justifications
     with tab1:
-        st.header("KPI Value Analysis")
+        st.header("KPI Audit Analysis")
         
-        # Key metrics overview
-        col1, col2 = st.columns([1, 1])
+        # Create a metrics summary counter at the top
+        col1, col2 = st.columns(2)
+        col1.metric("High Impact Metrics", high_impact, f"{high_impact_pct:.0%}")
+        col2.metric("Vanity Metrics", vanity, f"{vanity_pct:.0%}")
         
-        with col1:
-            # Count total metrics
-            total_metrics = len(analysis_df)
-            high_impact = sum(analysis_df["Classification"] == "High Impact")
-            vanity = sum(analysis_df["Classification"] == "Vanity")
-            
-            # Create metrics summary
-            st.subheader("Metrics Summary")
-            summary_cols = st.columns(2)
-            summary_cols[0].metric("High Impact Metrics", high_impact, f"{high_impact/total_metrics:.0%}")
-            summary_cols[1].metric("Vanity Metrics", vanity, f"{vanity/total_metrics:.0%}")
-            
-            # Show key metrics breakdown visualization
-            fig = create_key_metrics_breakdown(analysis_df)
-            st.plotly_chart(fig, use_container_width=True)
+        st.markdown("---")
         
-        with col2:
-            # Show metrics by department  
-            dept_fig = create_metrics_by_department(analysis_df)
-            st.plotly_chart(dept_fig, use_container_width=True)
+        # Executive Summary
+        st.subheader("Executive Summary")
+        st.markdown("""
+        This analysis has evaluated your organization's KPIs based on multiple factors including decision-making usage, 
+        review frequency, and business impact. Each metric was scored using a proven methodology that distinguishes 
+        vanity metrics from those driving real business value.
+        """)
         
-        # Top metrics to keep
-        st.subheader("Top High-Impact Metrics")
-        st.markdown("These metrics have the highest value scores and should be central to decision making:")
+        # Key findings in a formatted box
+        st.info(f"""
+        ### Key Findings
         
-        # Get top metrics
-        top_metrics_df = get_top_metrics(analysis_df, classified_metrics, metric_scores)
+        - Only **{high_impact}/{total_metrics}** metrics ({high_impact_pct:.0%}) qualify as high-impact KPIs that drive meaningful business decisions
+        - **{vanity}/{total_metrics}** metrics ({vanity_pct:.0%}) are vanity metrics that consume resources without proportionate value
+        - {"Several metrics appear across multiple departments, suggesting potential duplicate tracking efforts" if duplicate_metrics else "No duplicate metrics were identified across departments"}
+        """)
+        
+        # Detailed Analysis Section
+        st.subheader("Detailed Analysis")
+        
+        # Analysis of High-Impact Metrics
+        st.markdown("### High-Impact Metrics Analysis")
         
         if len(top_metrics_df) > 0:
-            # Display as table with HTML styling
-            st.markdown(create_top_metrics_table(top_metrics_df), unsafe_allow_html=True)
+            st.markdown("""
+            The following metrics demonstrate significant business value based on multiple factors:
+            1. Direct usage in decision-making processes
+            2. Regular review cadence
+            3. Clear connection to business objectives
+            """)
             
-            if len(top_metrics_df) < 3:
-                st.info("Only a few metrics were classified as high-impact. This suggests most of your metrics aren't directly tied to decision-making.")
+            # Display high-impact metrics with justification
+            for idx, row in top_metrics_df.iterrows():
+                with st.expander(f"{row['Department']} - {row['Metric_Name']} ({row['Score']:.0%})"):
+                    st.markdown(f"**Department:** {row['Department']}")
+                    st.markdown(f"**Value Score:** {row['Score']:.0%}")
+                    
+                    # Generate justification based on data
+                    justifications = []
+                    if row["Used_in_Decision_Making"]:
+                        justifications.append("✓ Actively used in decision-making processes")
+                    
+                    if "tied to real goals" in row["Interpretation_Notes"].lower():
+                        justifications.append("✓ Directly tied to business goals and outcomes")
+                    
+                    if row["Last_Reviewed"] in ["This week", "Last month"]:
+                        justifications.append(f"✓ Recently reviewed ({row['Last_Reviewed'].lower()})")
+                    
+                    if row["Metric_Last_Used_For_Decision"] in ["Recently", "2 weeks ago", "Used in QBR"]:
+                        justifications.append(f"✓ Recently used for decisions ({row['Metric_Last_Used_For_Decision']})")
+                    
+                    if row["Executive_Requested"]:
+                        justifications.append("✓ Executive visibility and attention")
+                    
+                    # Add any specific notes from the interpretation
+                    if len(justifications) > 0:
+                        st.markdown("**Justification:**")
+                        for j in justifications:
+                            st.markdown(j)
+                    
+                    st.markdown(f"**Notes:** {row['Interpretation_Notes']}")
+            
+            # Recommendations for high-impact metrics
+            st.markdown("**Recommendations:**")
+            st.markdown("""
+            - Maintain these high-impact metrics in primary dashboards
+            - Consider establishing regular review cadences if not already in place
+            - Document decision-making processes that utilize these metrics
+            """)
         else:
-            st.warning("No high-impact metrics found. Consider revising how metrics are used for decision making.")
+            st.warning("""
+            No high-impact metrics were identified. This could indicate:
+            
+            1. Metrics aren't being actively used for decision-making
+            2. The connection between metrics and business outcomes isn't clear
+            3. The organization may be collecting data without actionable purpose
+            
+            Consider a deeper review of how metrics inform business decisions.
+            """)
         
-        # Top vanity metrics to consider eliminating
-        st.subheader("Top Vanity Metrics to Consider Eliminating")
-        st.markdown("These metrics provide minimal value and should be considered for removal from dashboards:")
-        
-        # Get bottom metrics
-        vanity_metrics_df = get_vanity_metrics(analysis_df, classified_metrics, metric_scores, limit=5)
+        # Analysis of Vanity Metrics
+        st.markdown("### Vanity Metrics Analysis")
         
         if len(vanity_metrics_df) > 0:
-            # Create a simple table view
+            st.markdown("""
+            The following metrics show characteristics of vanity metrics that may not justify their collection and reporting costs:
+            """)
+            
+            # Display top vanity metrics with justification
+            for idx, row in vanity_metrics_df.iterrows():
+                with st.expander(f"{row['Department']} - {row['Metric_Name']} ({row['Score']:.0%})"):
+                    st.markdown(f"**Department:** {row['Department']}")
+                    st.markdown(f"**Value Score:** {row['Score']:.0%}")
+                    
+                    # Generate justification based on data
+                    reasons = []
+                    if not row["Used_in_Decision_Making"]:
+                        reasons.append("✗ Not used for decision-making")
+                    
+                    if "vanity" in row["Interpretation_Notes"].lower():
+                        reasons.append("✗ Identified as vanity metric in notes")
+                    
+                    if "optics" in row["Interpretation_Notes"].lower():
+                        reasons.append("✗ Used for optics rather than business decisions")
+                    
+                    if row["Last_Reviewed"] in ["Unknown", "Last quarter"]:
+                        reasons.append(f"✗ Infrequent review ({row['Last_Reviewed']})")
+                    
+                    if row["Metric_Last_Used_For_Decision"] in ["Never", "Don't know"]:
+                        reasons.append(f"✗ Not used for decisions ({row['Metric_Last_Used_For_Decision']})")
+                    
+                    # Add any specific notes from the interpretation
+                    if len(reasons) > 0:
+                        st.markdown("**Reasons for classification:**")
+                        for r in reasons:
+                            st.markdown(r)
+                    
+                    # Insufficient information disclaimer if needed
+                    if len(reasons) <= 1:
+                        st.markdown("**Note:** Limited information is available for this metric. Classification is based on available data but may warrant further investigation.")
+                    
+                    st.markdown(f"**Notes:** {row['Interpretation_Notes']}")
+            
+            # Recommendations for vanity metrics
+            st.markdown("**Recommendations:**")
+            st.markdown("""
+            - Consider removing these metrics from primary dashboards
+            - If retention is necessary, move to secondary/auxiliary reports
+            - Evaluate the resources allocated to tracking these metrics
+            - For metrics with potential value, establish clear decision-making use cases
+            """)
+        
+        # Duplicated Metrics Analysis
+        if duplicate_metrics:
+            st.markdown("### Duplicate Metrics Analysis")
+            st.markdown("""
+            Several metrics appear across multiple departments, which may indicate:
+            
+            1. Siloed operations with independent tracking
+            2. Lack of standardized definitions across the organization
+            3. Opportunity for consolidation and improved cross-departmental alignment
+            """)
+            
+            for metric, depts in duplicate_metrics.items():
+                if len(depts) > 1:  # Only show true duplicates
+                    st.markdown(f"**{metric}** appears in: {', '.join(depts)}")
+            
+            st.markdown("**Recommendations:**")
+            st.markdown("""
+            - Establish cross-department metric standardization
+            - Consolidate reporting to ensure consistent definitions
+            - Implement centralized ownership for each core metric
+            """)
+        
+        # Overall Recommendations
+        st.subheader("Strategic Recommendations")
+        st.markdown("""
+        Based on the comprehensive analysis, we recommend the following actions:
+        
+        1. **Metric Rationalization**: Reduce the total number of metrics by focusing on the high-impact KPIs identified
+        
+        2. **Governance Framework**: Establish a metric governance process with clear ownership and regular review cadence
+        
+        3. **Decision Mapping**: Document how each metric influences specific business decisions and outcomes
+        
+        4. **Dashboard Restructuring**: Create tiered dashboards with high-impact metrics prominently featured
+        
+        5. **Cross-Functional Alignment**: Standardize metric definitions and collection methodologies across departments
+        """)
+        
+    # Tab 2: Visualizations Tab
+    with tab2:
+        st.header("Metric Visualizations")
+        
+        st.subheader("Metrics Classification Overview")
+        # Create two columns for the visualizations
+        viz_col1, viz_col2 = st.columns(2)
+        
+        with viz_col1:
+            # Classification Breakdown Visualization
+            fig1 = create_key_metrics_breakdown(analysis_df)
+            st.plotly_chart(fig1, use_container_width=True)
+        
+        with viz_col2:
+            # Department Metrics Visualization
+            fig2 = create_metrics_by_department(analysis_df)
+            st.plotly_chart(fig2, use_container_width=True)
+        
+        # High Impact Metrics Table
+        st.subheader("High Impact Metrics")
+        if len(top_metrics_df) > 0:
+            st.markdown(create_top_metrics_table(top_metrics_df), unsafe_allow_html=True)
+        else:
+            st.info("No high-impact metrics identified based on current filters and threshold.")
+        
+        # Vanity Metrics Table with more details
+        st.subheader("Top Vanity Metrics")
+        if len(vanity_metrics_df) > 0:
             vanity_table = vanity_metrics_df[["Department", "Metric_Name", "Score", "Interpretation_Notes"]].copy()
             vanity_table.columns = ["Department", "Metric", "Value Score", "Notes"]
             vanity_table["Value Score"] = vanity_table["Value Score"].map("{:.0%}".format)
@@ -262,20 +450,9 @@ if df is not None:
             st.dataframe(vanity_table, use_container_width=True)
         else:
             st.info("No vanity metrics found with current filters.")
-        
-        # Find potential duplicate metrics
-        duplicate_metrics = find_duplicate_metrics(filtered_df)
-        
-        if duplicate_metrics:
-            st.subheader("Potential Duplicate Metrics")
-            st.markdown("These metrics appear across multiple departments and could be consolidated:")
-            
-            # Create a more visual representation of duplicates
-            for metric, depts in duplicate_metrics.items():
-                if len(depts) > 1:  # Only show true duplicates
-                    st.markdown(f"**{metric}** appears in: {', '.join(depts)}")
     
-    with tab2:
+    # Tab 3: Metrics Details (original tab2 content)
+    with tab3:
         st.header("Metrics Details")
         
         # Option to view all metrics or detailed view of single metric

@@ -24,7 +24,7 @@ def create_key_metrics_breakdown(df):
         x="Count",
         color="Classification",
         color_discrete_map={
-            "High Impact": "#2ecc71",
+            "High Impact": "#27ae60",
             "Vanity": "#e74c3c"
         },
         title="Metric Classification Distribution",
@@ -40,25 +40,48 @@ def create_key_metrics_breakdown(df):
             x=row["Count"],
             text=f"{row['Count']/total:.0%}",
             showarrow=False,
-            xshift=20,
-            font=dict(size=14, color="white" if row["Classification"] == "High Impact" else "black")
+            xshift=25,
+            font=dict(
+                size=16, 
+                color="#000000",
+                family="Arial",
+                bgcolor="#ffffff",
+                borderpad=4
+            )
         )
     
     # Customize appearance
     fig.update_layout(
         xaxis_title="Number of Metrics",
         yaxis_title="",
-        plot_bgcolor='rgba(248, 248, 248, 0.95)',
+        plot_bgcolor='rgba(240, 240, 240, 0.9)',
         paper_bgcolor='white',
-        font=dict(size=14),
-        height=300
+        font=dict(size=14, color="#333333"),
+        height=300,
+        margin=dict(l=10, r=40, t=40, b=10),
+    )
+    
+    # Ensure y-axis labels are clearly visible
+    fig.update_yaxes(
+        tickfont=dict(color="#333333", size=14),
+        title_font=dict(size=14, color="#333333")
+    )
+    
+    # Ensure x-axis labels are clearly visible
+    fig.update_xaxes(
+        tickfont=dict(color="#333333", size=14),
+        title_font=dict(size=14, color="#333333")
     )
     
     # Remove legends since colors are self-explanatory
     fig.update_layout(showlegend=False)
     
-    # Format the text
-    fig.update_traces(texttemplate='%{text}', textposition='inside')
+    # Format the text with better contrast
+    fig.update_traces(
+        texttemplate='%{text}', 
+        textposition='inside',
+        textfont=dict(color="white", size=16, family="Arial")
+    )
     
     return fig
 
@@ -82,7 +105,7 @@ def create_metrics_by_department(df):
         x="Count",
         color="Classification",
         color_discrete_map={
-            "High Impact": "#2ecc71", 
+            "High Impact": "#27ae60", 
             "Vanity": "#e74c3c"
         },
         title="Metrics by Department",
@@ -94,14 +117,32 @@ def create_metrics_by_department(df):
     fig.update_layout(
         xaxis_title="Number of Metrics",
         yaxis_title="",
-        plot_bgcolor='rgba(248, 248, 248, 0.95)',
+        plot_bgcolor='rgba(240, 240, 240, 0.9)',
         paper_bgcolor='white',
-        font=dict(size=14),
+        font=dict(size=14, color="#333333"),
         bargap=0.2,
+        margin=dict(l=10, r=10, t=40, b=10),
     )
     
-    # Position text inside bars when there's room
-    fig.update_traces(textposition='inside', insidetextanchor='middle')
+    # Ensure y-axis labels are clearly visible
+    fig.update_yaxes(
+        tickfont=dict(color="#333333", size=14),
+        title_font=dict(size=14, color="#333333")
+    )
+    
+    # Ensure x-axis labels are clearly visible
+    fig.update_xaxes(
+        tickfont=dict(color="#333333", size=14),
+        title_font=dict(size=14, color="#333333")
+    )
+    
+    # Position text inside bars with better contrast
+    fig.update_traces(
+        textposition='inside', 
+        insidetextanchor='middle',
+        textfont=dict(color="white", size=14, family="Arial"),
+        insidetextfont=dict(color="white", size=14, family="Arial"),
+    )
     
     return fig
 
@@ -145,7 +186,7 @@ def create_metric_value_factors(metric_data):
         x="Value",
         orientation='h',
         color="Value",
-        color_discrete_map={0: "#e74c3c", 1: "#2ecc71"},
+        color_discrete_map={0: "#e74c3c", 1: "#27ae60"},
         title=f"Value Factors: {metric_data['Metric_Name']}",
         text=["No", "No", "No", "No", "No", "No"]
     )
@@ -164,17 +205,36 @@ def create_metric_value_factors(metric_data):
             range=[-0.1, 1.1]
         ),
         yaxis_title="",
-        plot_bgcolor='rgba(248, 248, 248, 0.95)',
+        plot_bgcolor='rgba(240, 240, 240, 0.9)',
         paper_bgcolor='white',
-        font=dict(size=14),
-        height=400
+        font=dict(size=14, color="#333333"),
+        height=400,
+        margin=dict(l=10, r=10, t=40, b=10),
+        title_font=dict(size=16, color="#333333")
+    )
+    
+    # Ensure y-axis labels are clearly visible
+    fig.update_yaxes(
+        tickfont=dict(color="#333333", size=14),
+        title_font=dict(size=14, color="#333333")
+    )
+    
+    # Ensure x-axis labels are clearly visible
+    fig.update_xaxes(
+        tickfont=dict(color="#333333", size=14),
+        title_font=dict(size=14, color="#333333")
     )
     
     # Remove legend
     fig.update_layout(showlegend=False)
     
-    # Update text position
-    fig.update_traces(textposition='inside', insidetextanchor='middle')
+    # Update text position and styling for better contrast
+    fig.update_traces(
+        textposition='inside', 
+        insidetextanchor='middle',
+        textfont=dict(color="white", size=16, family="Arial"),
+        insidetextfont=dict(color="white", size=16, family="Arial")
+    )
     
     return fig
 
@@ -239,7 +299,7 @@ def create_top_metrics_table(df, top_n=5):
 def get_color_for_classification(classification, alpha=1.0):
     """Get color for a classification category."""
     colors = {
-        "High Impact": f"rgba(46, 204, 113, {alpha})",
-        "Vanity": f"rgba(231, 76, 60, {alpha})"
+        "High Impact": f"rgba(39, 174, 96, {alpha})",  # Darker green for better visibility
+        "Vanity": f"rgba(231, 76, 60, {alpha})"       # Red
     }
     return colors.get(classification, f"rgba(149, 165, 166, {alpha})")
