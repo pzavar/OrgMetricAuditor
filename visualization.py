@@ -44,10 +44,10 @@ def create_key_metrics_breakdown(df):
             font=dict(
                 size=16, 
                 color="#000000",
-                family="Arial",
-                bgcolor="#ffffff",
-                borderpad=4
-            )
+                family="Arial"
+            ),
+            bgcolor="#ffffff",
+            borderpad=4
         )
     
     # Customize appearance
