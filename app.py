@@ -111,10 +111,20 @@ if df is not None:
     classified_metrics = classify_metrics(filtered_df)
     metric_scores = calculate_metric_scores(filtered_df, weights=score_weights)
     
+    # Check if metric_scores is empty (which can happen with empty filtered data)
+    if not metric_scores:
+        st.warning("No metrics match your filter criteria. Try adjusting your filters.")
+        st.stop()
+    
+    # Create DataFrame from metric_scores dictionary (handle empty case)
+    metric_scores_df = pd.DataFrame({"Score": metric_scores})
+    
     # Combine the dataframes
-    analysis_df = pd.merge(filtered_df, 
-                          pd.DataFrame(metric_scores).reset_index().rename(columns={"index": "Metric_ID"}), 
-                          left_index=True, right_on="Metric_ID")
+    analysis_df = pd.merge(
+        filtered_df, 
+        metric_scores_df.reset_index().rename(columns={"index": "Metric_ID"}), 
+        left_index=True, right_on="Metric_ID"
+    )
     
     # Add classification
     analysis_df["Classification"] = classified_metrics
@@ -222,10 +232,20 @@ if df is not None:
         dept_classified = classify_metrics(dept_df)
         dept_scores = calculate_metric_scores(dept_df, weights=score_weights)
         
+        # Create DataFrame from dept_scores dictionary
+        if not dept_scores:
+            # Handle empty data case
+            st.warning(f"No metrics data available for {selected_dept}.")
+            st.stop()
+            
+        dept_scores_df = pd.DataFrame({"Score": dept_scores})
+        
         # Combine data
-        dept_analysis_df = pd.merge(dept_df, 
-                                  pd.DataFrame(dept_scores).reset_index().rename(columns={"index": "Metric_ID"}), 
-                                  left_index=True, right_on="Metric_ID")
+        dept_analysis_df = pd.merge(
+            dept_df, 
+            dept_scores_df.reset_index().rename(columns={"index": "Metric_ID"}), 
+            left_index=True, right_on="Metric_ID"
+        )
         dept_analysis_df["Classification"] = dept_classified
         
         # Department metrics overview
