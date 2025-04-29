@@ -6,12 +6,19 @@ import numpy as np
 from io import StringIO
 
 from utils import preprocess_data, load_sample_data
-from analysis import classify_metrics, calculate_metric_scores, get_recommendations
+from analysis import (
+    calculate_metric_scores, 
+    classify_metrics, 
+    get_top_metrics,
+    get_vanity_metrics,
+    find_duplicate_metrics
+)
 from visualization import (
-    create_metric_health_dashboard,
-    create_department_metrics_chart,
-    create_metrics_classification_chart,
-    create_metric_scores_radar_chart
+    create_key_metrics_breakdown,
+    create_metrics_by_department, 
+    create_metric_value_factors,
+    create_top_metrics_table,
+    get_color_for_classification
 )
 
 # Set page config
@@ -21,15 +28,14 @@ st.set_page_config(
     layout="wide"
 )
 
-# Header
+# Page title and description
 st.title("KPI Audit Tool")
 st.markdown("""
-This tool analyzes your organization's metrics to identify valuable KPIs 
+This tool analyzes your organization's metrics to identify high-value KPIs 
 and recommend eliminating vanity metrics that don't drive decision-making.
 """)
 
 # Sidebar
-st.sidebar.image("https://images.unsplash.com/photo-1542744173-05336fcc7ad4", use_container_width=True)
 st.sidebar.title("KPI Audit Controls")
 
 # Data upload
@@ -96,27 +102,26 @@ if df is not None:
         )
         filtered_df = filtered_df[search_mask]
     
-    # Add analyzer options
+    # Add analyzer options - with stricter defaults
     st.sidebar.header("4. Analysis Options")
     score_weights = {
+        "Used_in_Decision_Making": st.sidebar.slider("Weight for Decision Making Usage", 0.0, 1.0, 0.5, 0.1),
         "Visible_in_Dashboard": st.sidebar.slider("Weight for Dashboard Visibility", 0.0, 1.0, 0.1, 0.1),
-        "Used_in_Decision_Making": st.sidebar.slider("Weight for Decision Making Usage", 0.0, 1.0, 0.3, 0.1),
         "Executive_Requested": st.sidebar.slider("Weight for Executive Request", 0.0, 1.0, 0.1, 0.1),
-        "Review_Score": st.sidebar.slider("Weight for Review Frequency", 0.0, 1.0, 0.2, 0.1),
-        "Usage_Score": st.sidebar.slider("Weight for Decision Usage", 0.0, 1.0, 0.2, 0.1),
-        "Notes_Score": st.sidebar.slider("Weight for Quality of Notes", 0.0, 1.0, 0.1, 0.1)
+        "Review_Score": st.sidebar.slider("Weight for Review Frequency", 0.0, 1.0, 0.15, 0.05),
+        "Usage_Score": st.sidebar.slider("Weight for Decision Usage", 0.0, 1.0, 0.15, 0.05)
     }
     
     # Run analysis
-    classified_metrics = classify_metrics(filtered_df)
     metric_scores = calculate_metric_scores(filtered_df, weights=score_weights)
+    classified_metrics = classify_metrics(filtered_df)
     
     # Check if metric_scores is empty (which can happen with empty filtered data)
     if not metric_scores:
         st.warning("No metrics match your filter criteria. Try adjusting your filters.")
         st.stop()
     
-    # Create DataFrame from metric_scores dictionary (handle empty case)
+    # Create DataFrame from metric_scores dictionary
     metric_scores_df = pd.DataFrame({"Score": metric_scores})
     
     # Combine the dataframes
@@ -127,268 +132,207 @@ if df is not None:
     )
     
     # Add classification
-    analysis_df["Classification"] = classified_metrics
+    analysis_df["Classification"] = pd.Series(classified_metrics)
     
-    # Main content area
-    tab1, tab2, tab3, tab4 = st.tabs(["Dashboard", "Metric Analysis", "Department Insights", "Recommendations"])
+    # Main content area - simplified to 2 tabs
+    tab1, tab2 = st.tabs(["Analysis", "Metrics Details"])
     
     with tab1:
-        st.header("Metrics Health Dashboard")
-
+        st.header("KPI Value Analysis")
         
-        # Key metrics
-        col1, col2, col3, col4 = st.columns(4)
+        # Key metrics overview
+        col1, col2 = st.columns([1, 1])
         
-        # Count metrics by classification
-        classification_counts = analysis_df["Classification"].value_counts().to_dict()
-        high_impact = classification_counts.get("High Impact", 0)
-        vanity = classification_counts.get("Vanity", 0)
-        remove = classification_counts.get("Remove", 0)
-        improve = classification_counts.get("Improve", 0)
-        
-        col1.metric("High Impact Metrics", high_impact, f"{high_impact/len(analysis_df):.0%}")
-        col2.metric("Vanity Metrics", vanity, f"{vanity/len(analysis_df):.0%}")
-        col3.metric("Candidates for Removal", remove, f"{remove/len(analysis_df):.0%}")
-        col4.metric("Metrics to Improve", improve, f"{improve/len(analysis_df):.0%}")
-        
-        # Visualization of metric health
-        st.subheader("Metric Health Overview")
-        fig = create_metric_health_dashboard(analysis_df)
-        st.plotly_chart(fig, use_container_width=True)
-        
-        # Department distribution
-        st.subheader("Metrics by Department")
-        dept_fig = create_department_metrics_chart(analysis_df)
-        st.plotly_chart(dept_fig, use_container_width=True)
-        
-    with tab2:
-        st.header("Metric Analysis")
-        
-        # Metrics classification
-        st.subheader("Metrics Classification")
-        class_fig = create_metrics_classification_chart(analysis_df)
-        st.plotly_chart(class_fig, use_container_width=True)
-        
-        # Table view of metrics with scores
-        st.subheader("Metrics Scores")
-        # Format the table
-        table_df = analysis_df[["Department", "Metric_Name", "Visible_in_Dashboard", 
-                               "Used_in_Decision_Making", "Executive_Requested", 
-                               "Score", "Classification", "Interpretation_Notes"]].copy()
-        
-        # Sort by score and add color
-        table_df = table_df.sort_values(by="Score", ascending=False)
-        
-        # Add color coding based on classification
-        def color_classification(val):
-            if val == "High Impact":
-                return 'background-color: rgba(46, 204, 113, 0.3)'
-            elif val == "Vanity":
-                return 'background-color: rgba(241, 196, 15, 0.3)'
-            elif val == "Remove":
-                return 'background-color: rgba(231, 76, 60, 0.3)'
-            else:  # Improve
-                return 'background-color: rgba(52, 152, 219, 0.3)'
-                
-        # Show styled dataframe
-        st.dataframe(table_df.style.map(color_classification, subset=['Classification']), 
-                    use_container_width=True)
-        
-        # Detailed metric view
-        st.subheader("Individual Metric Analysis")
-        selected_metric_row = st.selectbox("Select a metric to analyze:", 
-                                         options=analysis_df.index, 
-                                         format_func=lambda x: f"{analysis_df.loc[x, 'Department']} - {analysis_df.loc[x, 'Metric_Name']}")
-        
-        if selected_metric_row is not None:
-            metric_data = analysis_df.loc[selected_metric_row]
+        with col1:
+            # Count total metrics
+            total_metrics = len(analysis_df)
+            high_impact = sum(analysis_df["Classification"] == "High Impact")
+            vanity = sum(analysis_df["Classification"] == "Vanity")
             
-            # Display metric details
-            col1, col2 = st.columns(2)
+            # Create metrics summary
+            st.subheader("Metrics Summary")
+            summary_cols = st.columns(2)
+            summary_cols[0].metric("High Impact Metrics", high_impact, f"{high_impact/total_metrics:.0%}")
+            summary_cols[1].metric("Vanity Metrics", vanity, f"{vanity/total_metrics:.0%}")
             
-            with col1:
-                st.write(f"**Department:** {metric_data['Department']}")
-                st.write(f"**Metric Name:** {metric_data['Metric_Name']}")
-                st.write(f"**Classification:** {metric_data['Classification']}")
-                st.write(f"**Overall Score:** {metric_data['Score']:.2f}")
-                st.write(f"**Interpretation Notes:** {metric_data['Interpretation_Notes']}")
+            # Show key metrics breakdown visualization
+            fig = create_key_metrics_breakdown(analysis_df)
+            st.plotly_chart(fig, use_container_width=True)
+        
+        with col2:
+            # Show metrics by department  
+            dept_fig = create_metrics_by_department(analysis_df)
+            st.plotly_chart(dept_fig, use_container_width=True)
+        
+        # Top metrics to keep
+        st.subheader("Top High-Impact Metrics")
+        st.markdown("These metrics have the highest value scores and should be central to decision making:")
+        
+        # Get top metrics
+        top_metrics_df = get_top_metrics(analysis_df, classified_metrics, metric_scores)
+        
+        if len(top_metrics_df) > 0:
+            # Display as table with HTML styling
+            st.markdown(create_top_metrics_table(top_metrics_df), unsafe_allow_html=True)
             
-            with col2:
-                # Radar chart for the metric
-                radar_fig = create_metric_scores_radar_chart(metric_data)
-                st.plotly_chart(radar_fig, use_container_width=True)
-    
-    with tab3:
-        st.header("Department Insights")
+            if len(top_metrics_df) < 3:
+                st.info("Only a few metrics were classified as high-impact. This suggests most of your metrics aren't directly tied to decision-making.")
+        else:
+            st.warning("No high-impact metrics found. Consider revising how metrics are used for decision making.")
         
-        # Department selection for detailed view
-        dept_options = sorted(df["Department"].unique().tolist())
-        selected_dept = st.selectbox("Select Department for Analysis:", dept_options)
+        # Top vanity metrics to consider eliminating
+        st.subheader("Top Vanity Metrics to Consider Eliminating")
+        st.markdown("These metrics provide minimal value and should be considered for removal from dashboards:")
         
-        # Filter data for selected department
-        dept_df = df[df["Department"] == selected_dept].copy()
-        dept_classified = classify_metrics(dept_df)
-        dept_scores = calculate_metric_scores(dept_df, weights=score_weights)
+        # Get bottom metrics
+        vanity_metrics_df = get_vanity_metrics(analysis_df, classified_metrics, metric_scores, limit=5)
         
-        # Create DataFrame from dept_scores dictionary
-        if not dept_scores:
-            # Handle empty data case
-            st.warning(f"No metrics data available for {selected_dept}.")
-            st.stop()
+        if len(vanity_metrics_df) > 0:
+            # Create a simple table view
+            vanity_table = vanity_metrics_df[["Department", "Metric_Name", "Score", "Interpretation_Notes"]].copy()
+            vanity_table.columns = ["Department", "Metric", "Value Score", "Notes"]
+            vanity_table["Value Score"] = vanity_table["Value Score"].map("{:.0%}".format)
             
-        dept_scores_df = pd.DataFrame({"Score": dept_scores})
+            st.dataframe(vanity_table, use_container_width=True)
+        else:
+            st.info("No vanity metrics found with current filters.")
         
-        # Combine data
-        dept_analysis_df = pd.merge(
-            dept_df, 
-            dept_scores_df.reset_index().rename(columns={"index": "Metric_ID"}), 
-            left_index=True, right_on="Metric_ID"
-        )
-        dept_analysis_df["Classification"] = dept_classified
+        # Find potential duplicate metrics
+        duplicate_metrics = find_duplicate_metrics(filtered_df)
         
-        # Department metrics overview
-        st.subheader(f"Metrics Overview for {selected_dept}")
-        
-        col1, col2, col3 = st.columns(3)
-        dept_metrics_count = len(dept_analysis_df)
-        dept_high_impact = sum(dept_analysis_df["Classification"] == "High Impact")
-        dept_vanity = sum(dept_analysis_df["Classification"] == "Vanity")
-        dept_remove = sum(dept_analysis_df["Classification"] == "Remove")
-        
-        col1.metric("Total Metrics", dept_metrics_count)
-        col2.metric("High Impact", dept_high_impact, f"{dept_high_impact/dept_metrics_count:.0%}")
-        col3.metric("Metrics to Remove/Improve", dept_vanity + dept_remove, 
-                  f"{(dept_vanity + dept_remove)/dept_metrics_count:.0%}")
-        
-        # Chart for department metrics
-        st.subheader(f"Metrics Breakdown for {selected_dept}")
-        
-        # Create pie chart for department metrics classification
-        dept_class_counts = dept_analysis_df["Classification"].value_counts().reset_index()
-        dept_class_counts.columns = ["Classification", "Count"]
-        
-        dept_pie = px.pie(
-            dept_class_counts, 
-            values="Count", 
-            names="Classification",
-            color="Classification",
-            color_discrete_map={
-                "High Impact": "#2ecc71",
-                "Vanity": "#f1c40f",
-                "Remove": "#e74c3c",
-                "Improve": "#3498db"
-            },
-            title=f"Metrics Classification for {selected_dept}"
-        )
-        st.plotly_chart(dept_pie, use_container_width=True)
-        
-        # Department metrics table
-        st.subheader(f"All Metrics for {selected_dept}")
-        dept_table = dept_analysis_df[["Metric_Name", "Visible_in_Dashboard", 
-                                     "Used_in_Decision_Making", "Executive_Requested", 
-                                     "Score", "Classification", "Interpretation_Notes"]].copy()
-        dept_table = dept_table.sort_values(by="Score", ascending=False)
-        
-        st.dataframe(dept_table.style.map(color_classification, subset=['Classification']), 
-                   use_container_width=True)
-        
-    with tab4:
-        st.header("KPI Recommendations")
-        
-        # Get recommendations
-        keep, remove, improve, duplicate = get_recommendations(analysis_df)
-        
-        # Display recommendations
-        st.subheader("Metrics to Keep")
-        st.info(f"These {len(keep)} metrics are high-impact and should remain central to your dashboards and decision-making.")
-        
-        if len(keep) > 0:
-            keep_df = analysis_df.loc[keep][["Department", "Metric_Name", "Score", "Interpretation_Notes"]]
-            st.dataframe(keep_df.sort_values(by="Score", ascending=False), use_container_width=True)
-        
-        st.subheader("Metrics to Remove")
-        st.error(f"Consider removing these {len(remove)} metrics that provide little value and clutter your dashboards.")
-        
-        if len(remove) > 0:
-            remove_df = analysis_df.loc[remove][["Department", "Metric_Name", "Score", "Interpretation_Notes"]]
-            st.dataframe(remove_df.sort_values(by="Score", ascending=True), use_container_width=True)
-        
-        st.subheader("Metrics to Improve")
-        st.warning(f"These {len(improve)} metrics have potential but need refinement to become more actionable.")
-        
-        if len(improve) > 0:
-            improve_df = analysis_df.loc[improve][["Department", "Metric_Name", "Score", "Interpretation_Notes"]]
-            improve_df = improve_df.sort_values(by="Score", ascending=False)
-            
-            # Add improvement suggestions based on notes
-            improve_df["Improvement Suggestion"] = improve_df["Interpretation_Notes"].apply(
-                lambda x: "Link to decision-making processes" if "vanity" in x.lower() 
-                else "Clarify ownership and review regularly" if "unclear" in x.lower() 
-                else "Document relevance to business outcomes" if "optics" in x.lower()
-                else "Establish regular review and decision-making usage"
-            )
-            
-            st.dataframe(improve_df, use_container_width=True)
-        
-        # Potential duplicate metrics
-        if len(duplicate) > 0:
+        if duplicate_metrics:
             st.subheader("Potential Duplicate Metrics")
-            st.warning(f"You have {len(duplicate)} metrics that appear across multiple departments. Consider consolidating these:")
+            st.markdown("These metrics appear across multiple departments and could be consolidated:")
             
-            for metric, depts in duplicate.items():
-                st.markdown(f"**{metric}** appears in: {', '.join(depts)}")
+            # Create a more visual representation of duplicates
+            for metric, depts in duplicate_metrics.items():
+                if len(depts) > 1:  # Only show true duplicates
+                    st.markdown(f"**{metric}** appears in: {', '.join(depts)}")
+    
+    with tab2:
+        st.header("Metrics Details")
         
-        # Export options
-        st.subheader("Export Analysis")
-        export_type = st.radio("Export format:", ["CSV", "Excel"])
+        # Option to view all metrics or detailed view of single metric
+        view_option = st.radio(
+            "Select view:",
+            ["View all metrics", "Analyze individual metric"]
+        )
         
-        if st.button("Export Analysis"):
-            # Prepare export dataframe
-            export_df = analysis_df[["Department", "Metric_Name", "Visible_in_Dashboard", 
-                                   "Used_in_Decision_Making", "Executive_Requested", 
-                                   "Last_Reviewed", "Metric_Last_Used_For_Decision",
-                                   "Score", "Classification", "Interpretation_Notes"]]
+        if view_option == "View all metrics":
+            # Show complete metrics table with value assessment
+            st.subheader("Complete Metrics Assessment")
             
-            if export_type == "CSV":
-                csv = export_df.to_csv(index=False)
-                st.download_button(
-                    label="Download CSV",
-                    data=csv,
-                    file_name="kpi_audit_results.csv",
-                    mime="text/csv",
-                )
-            else:  # Excel
-                # For Excel, we use a workaround with BytesIO since Streamlit doesn't directly support Excel
-                import io
-                buffer = io.BytesIO()
-                with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
-                    export_df.to_excel(writer, sheet_name='KPI Audit', index=False)
-                    # Get the workbook and add some formatting
-                    workbook = writer.book
-                    worksheet = writer.sheets['KPI Audit']
-                    format_header = workbook.add_format({'bold': True, 'bg_color': '#D9E1F2', 'border': 1})
-                    for col_num, value in enumerate(export_df.columns.values):
-                        worksheet.write(0, col_num, value, format_header)
-                    worksheet.set_column(0, len(export_df.columns)-1, 15)
+            # Create a styled table
+            table_df = analysis_df[["Department", "Metric_Name", "Visible_in_Dashboard", 
+                                   "Used_in_Decision_Making", "Last_Reviewed",
+                                   "Metric_Last_Used_For_Decision", "Score", 
+                                   "Classification", "Interpretation_Notes"]].copy()
+            
+            # Sort by score and add color coding
+            table_df = table_df.sort_values(by="Score", ascending=False)
+            
+            # Define color function for classification
+            def color_classification(val):
+                if val == "High Impact":
+                    return 'background-color: rgba(46, 204, 113, 0.3)'
+                else:  # Vanity
+                    return 'background-color: rgba(231, 76, 60, 0.3)'
+            
+            # Show styled dataframe
+            st.dataframe(table_df.style.map(color_classification, subset=['Classification']), 
+                       use_container_width=True)
+            
+            # Option to download results
+            st.subheader("Export Results")
+            
+            col1, col2 = st.columns([1, 3])
+            export_format = col1.selectbox("Export format:", ["CSV", "Excel"])
+            
+            if col2.button("Export Analysis"):
+                # Prepare export dataframe
+                export_df = analysis_df[["Department", "Metric_Name", "Visible_in_Dashboard", 
+                                       "Used_in_Decision_Making", "Executive_Requested", 
+                                       "Last_Reviewed", "Metric_Last_Used_For_Decision",
+                                       "Score", "Classification", "Interpretation_Notes"]]
                 
-                st.download_button(
-                    label="Download Excel",
-                    data=buffer.getvalue(),
-                    file_name="kpi_audit_results.xlsx",
-                    mime="application/vnd.ms-excel",
-                )
-        
-        # Next steps guidance
-        st.subheader("Next Steps")
-        st.markdown("""
-        Once you've reviewed these recommendations, consider:
-        
-        1. **Implement a Metric Governance Process** - Establish a regular review cadence for all metrics
-        2. **Link Metrics to Business Outcomes** - Ensure every metric directly ties to a business objective
-        3. **Reduce Dashboard Clutter** - Remove the identified vanity metrics from main dashboards
-        4. **Consolidate Duplicate Metrics** - Standardize metrics that appear across multiple departments
-        5. **Create Tiered Dashboards** - Primary dashboard with high-impact metrics, secondary dashboards for details
-        """)
-
+                if export_format == "CSV":
+                    csv = export_df.to_csv(index=False)
+                    st.download_button(
+                        label="Download CSV",
+                        data=csv,
+                        file_name="kpi_audit_results.csv",
+                        mime="text/csv",
+                    )
+                else:  # Excel
+                    # For Excel, we use a workaround with BytesIO since Streamlit doesn't directly support Excel
+                    import io
+                    buffer = io.BytesIO()
+                    with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
+                        export_df.to_excel(writer, sheet_name='KPI Audit', index=False)
+                        # Get the workbook and add some formatting
+                        workbook = writer.book
+                        worksheet = writer.sheets['KPI Audit']
+                        format_header = workbook.add_format({'bold': True, 'bg_color': '#D9E1F2', 'border': 1})
+                        for col_num, value in enumerate(export_df.columns.values):
+                            worksheet.write(0, col_num, value, format_header)
+                        worksheet.set_column(0, len(export_df.columns)-1, 15)
+                    
+                    st.download_button(
+                        label="Download Excel",
+                        data=buffer.getvalue(),
+                        file_name="kpi_audit_results.xlsx",
+                        mime="application/vnd.ms-excel",
+                    )
+            
+        else:  # Analyze individual metric
+            # Interactive metric selection and analysis
+            st.subheader("Individual Metric Analysis")
+            
+            # Metric selection
+            selected_metric_row = st.selectbox("Select a metric to analyze:", 
+                                             options=analysis_df.index, 
+                                             format_func=lambda x: f"{analysis_df.loc[x, 'Department']} - {analysis_df.loc[x, 'Metric_Name']}")
+            
+            if selected_metric_row is not None:
+                metric_data = analysis_df.loc[selected_metric_row]
+                
+                # Display metric details
+                col1, col2 = st.columns([1, 1])
+                
+                with col1:
+                    # Basic information
+                    st.markdown(f"**Department:** {metric_data['Department']}")
+                    st.markdown(f"**Metric Name:** {metric_data['Metric_Name']}")
+                    st.markdown(f"**Classification:** {metric_data['Classification']}")
+                    st.markdown(f"**Value Score:** {metric_data['Score']:.0%}")
+                    
+                    # Additional details
+                    st.markdown("#### Metric Details")
+                    st.markdown(f"**Last Reviewed:** {metric_data['Last_Reviewed']}")
+                    st.markdown(f"**Last Used for Decision:** {metric_data['Metric_Last_Used_For_Decision']}")
+                    st.markdown(f"**Notes:** {metric_data['Interpretation_Notes']}")
+                
+                with col2:
+                    # Show value factors chart
+                    factor_fig = create_metric_value_factors(metric_data)
+                    st.plotly_chart(factor_fig, use_container_width=True)
+                
+                # Value assessment
+                st.subheader("Value Assessment")
+                
+                if metric_data["Classification"] == "High Impact":
+                    st.success("""
+                    This is a high-impact metric that provides significant value:
+                    - Continue using this metric in dashboards and decision-making
+                    - Ensure it's regularly reviewed and updated
+                    - Consider elevating its visibility across the organization
+                    """)
+                else:
+                    st.warning("""
+                    This appears to be a vanity metric with limited decision-making value:
+                    - Consider removing from main dashboards to reduce clutter
+                    - If keeping, clearly document how it should drive decisions
+                    - Review whether resources spent tracking this metric could be better allocated
+                    """)
 else:
     st.error("No data available. Please upload a CSV file or select the sample data option.")

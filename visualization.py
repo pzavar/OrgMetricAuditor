@@ -3,131 +3,9 @@ import plotly.graph_objects as go
 import pandas as pd
 import numpy as np
 
-def create_metric_health_dashboard(df):
+def create_key_metrics_breakdown(df):
     """
-    Create a comprehensive health dashboard for all metrics.
-    
-    Args:
-        df: DataFrame with processed metrics data
-    
-    Returns:
-        Plotly figure object
-    """
-    # Create a scatter plot with different dimensions
-    fig = px.scatter(
-        df,
-        x="Score",
-        y="Review_Score",
-        size="Usage_Score",
-        color="Classification",
-        hover_name="Metric_Name",
-        hover_data=["Department", "Interpretation_Notes"],
-        text="Metric_Name",
-        color_discrete_map={
-            "High Impact": "#2ecc71",
-            "Vanity": "#f1c40f",
-            "Remove": "#e74c3c",
-            "Improve": "#3498db"
-        },
-        size_max=15,
-        opacity=0.7,
-        title="Metric Health Dashboard"
-    )
-    
-    # Customize the appearance
-    fig.update_layout(
-        xaxis_title="Overall Metric Score",
-        yaxis_title="Review Frequency",
-        legend_title="Classification",
-        height=600,
-        plot_bgcolor='rgba(240, 240, 240, 0.5)',
-        paper_bgcolor='white',
-        font=dict(size=12)
-    )
-    
-    # Add shaped regions to indicate score ranges
-    fig.add_shape(
-        type="rect",
-        x0=0.7, y0=0,
-        x1=1, y1=4,
-        line=dict(color="green", width=1),
-        fillcolor="rgba(46, 204, 113, 0.1)",
-        layer="below"
-    )
-    
-    fig.add_shape(
-        type="rect",
-        x0=0, y0=0,
-        x1=0.3, y1=4,
-        line=dict(color="red", width=1),
-        fillcolor="rgba(231, 76, 60, 0.1)",
-        layer="below"
-    )
-    
-    # Add annotations for the regions
-    fig.add_annotation(
-        x=0.85, y=3.8,
-        text="High Performing",
-        showarrow=False,
-        font=dict(color="green", size=12)
-    )
-    
-    fig.add_annotation(
-        x=0.15, y=3.8,
-        text="Poor Performing",
-        showarrow=False,
-        font=dict(color="red", size=12)
-    )
-    
-    # Hide text that would overlap
-    fig.update_traces(textposition='top center', textfont_size=10)
-    
-    return fig
-
-def create_department_metrics_chart(df):
-    """
-    Create a bar chart showing metrics by department and classification.
-    
-    Args:
-        df: DataFrame with processed metrics data
-    
-    Returns:
-        Plotly figure object
-    """
-    # Count metrics by department and classification
-    dept_class_counts = df.groupby(["Department", "Classification"]).size().reset_index(name="Count")
-    
-    # Create a grouped bar chart
-    fig = px.bar(
-        dept_class_counts,
-        x="Department",
-        y="Count",
-        color="Classification",
-        color_discrete_map={
-            "High Impact": "#2ecc71",
-            "Vanity": "#f1c40f",
-            "Remove": "#e74c3c",
-            "Improve": "#3498db"
-        },
-        title="Metrics by Department and Classification",
-        barmode="group"
-    )
-    
-    # Customize the appearance
-    fig.update_layout(
-        xaxis_title="Department",
-        yaxis_title="Number of Metrics",
-        legend_title="Classification",
-        plot_bgcolor='rgba(240, 240, 240, 0.5)',
-        paper_bgcolor='white',
-        font=dict(size=12)
-    )
-    
-    return fig
-
-def create_metrics_classification_chart(df):
-    """
-    Create a bar chart showing metrics classification distribution.
+    Create a bar chart showing the distribution of high-impact vs. vanity metrics.
     
     Args:
         df: DataFrame with processed metrics data
@@ -139,50 +17,97 @@ def create_metrics_classification_chart(df):
     class_counts = df["Classification"].value_counts().reset_index()
     class_counts.columns = ["Classification", "Count"]
     
-    # Sort by count descending
-    class_counts = class_counts.sort_values("Count", ascending=False)
-    
-    # Create a bar chart
+    # Create horizontal bar chart with value counts
     fig = px.bar(
         class_counts,
-        x="Classification",
-        y="Count",
+        y="Classification",
+        x="Count",
         color="Classification",
         color_discrete_map={
             "High Impact": "#2ecc71",
-            "Vanity": "#f1c40f",
-            "Remove": "#e74c3c",
-            "Improve": "#3498db"
+            "Vanity": "#e74c3c"
         },
-        title="Metrics Classification Distribution"
+        title="Metric Classification Distribution",
+        orientation='h',
+        text="Count"
     )
     
     # Add percentage labels
     total = class_counts["Count"].sum()
     for i, row in class_counts.iterrows():
         fig.add_annotation(
-            x=row["Classification"],
-            y=row["Count"],
-            text=f"{row['Count']} ({row['Count']/total:.1%})",
+            y=row["Classification"],
+            x=row["Count"],
+            text=f"{row['Count']/total:.0%}",
             showarrow=False,
-            yshift=10,
-            font=dict(size=12)
+            xshift=20,
+            font=dict(size=14, color="white" if row["Classification"] == "High Impact" else "black")
         )
     
-    # Customize the appearance
+    # Customize appearance
     fig.update_layout(
-        xaxis_title="Classification",
-        yaxis_title="Number of Metrics",
-        plot_bgcolor='rgba(240, 240, 240, 0.5)',
+        xaxis_title="Number of Metrics",
+        yaxis_title="",
+        plot_bgcolor='rgba(248, 248, 248, 0.95)',
         paper_bgcolor='white',
-        font=dict(size=12)
+        font=dict(size=14),
+        height=300
     )
+    
+    # Remove legends since colors are self-explanatory
+    fig.update_layout(showlegend=False)
+    
+    # Format the text
+    fig.update_traces(texttemplate='%{text}', textposition='inside')
     
     return fig
 
-def create_metric_scores_radar_chart(metric_data):
+def create_metrics_by_department(df):
     """
-    Create a radar chart for an individual metric's scores.
+    Create a horizontal bar chart showing metrics by department, split by classification.
+    
+    Args:
+        df: DataFrame with processed metrics data
+    
+    Returns:
+        Plotly figure object
+    """
+    # Count metrics by department and classification
+    dept_counts = df.groupby(["Department", "Classification"]).size().reset_index(name="Count")
+    
+    # Create a stacked horizontal bar chart
+    fig = px.bar(
+        dept_counts,
+        y="Department",
+        x="Count",
+        color="Classification",
+        color_discrete_map={
+            "High Impact": "#2ecc71", 
+            "Vanity": "#e74c3c"
+        },
+        title="Metrics by Department",
+        orientation='h',
+        text="Count"
+    )
+    
+    # Customize appearance
+    fig.update_layout(
+        xaxis_title="Number of Metrics",
+        yaxis_title="",
+        plot_bgcolor='rgba(248, 248, 248, 0.95)',
+        paper_bgcolor='white',
+        font=dict(size=14),
+        bargap=0.2,
+    )
+    
+    # Position text inside bars when there's room
+    fig.update_traces(textposition='inside', insidetextanchor='middle')
+    
+    return fig
+
+def create_metric_value_factors(metric_data):
+    """
+    Create a bar chart showing the factors contributing to a metric's value.
     
     Args:
         metric_data: Series with processed metric data for a single row
@@ -190,71 +115,131 @@ def create_metric_scores_radar_chart(metric_data):
     Returns:
         Plotly figure object
     """
-    # Define the categories for the radar chart
-    categories = [
-        'Dashboard Visibility', 
-        'Decision Making Usage',
-        'Executive Requested', 
-        'Review Frequency',
-        'Usage Recency',
-        'Quality of Notes'
+    # Define the factors and their values
+    factors = [
+        'Used for Decision Making',
+        'Visible in Dashboard',
+        'Executive Requested',
+        'Recent Review',
+        'Recent Usage',
+        'Tied to Real Goals'
     ]
     
-    # Extract the values for each category (normalized to 0-1)
+    # Calculate values for each factor (0 or 1 for simplicity)
     values = [
-        1 if metric_data["Visible_in_Dashboard"] else 0,
         1 if metric_data["Used_in_Decision_Making"] else 0,
+        1 if metric_data["Visible_in_Dashboard"] else 0,
         1 if metric_data["Executive_Requested"] else 0,
-        metric_data["Review_Score"] / 4,  # Normalize to 0-1
-        metric_data["Usage_Score"] / 4,  # Normalize to 0-1
-        metric_data["Notes_Score"] / 4  # Normalize to 0-1
+        1 if metric_data["Last_Reviewed"] in ["This week", "Last month"] else 0,
+        1 if metric_data["Metric_Last_Used_For_Decision"] in ["Recently", "2 weeks ago", "Used in QBR"] else 0,
+        1 if "tied to real goals" in str(metric_data["Interpretation_Notes"]).lower() else 0
     ]
     
-    # Close the loop for the radar chart
-    categories = categories + [categories[0]]
-    values = values + [values[0]]
+    # Create DataFrame for plotting
+    factor_df = pd.DataFrame({"Factor": factors, "Value": values})
     
-    # Create the radar chart
-    fig = go.Figure()
-    
-    fig.add_trace(go.Scatterpolar(
-        r=values,
-        theta=categories,
-        fill='toself',
-        name=f'{metric_data["Department"]} - {metric_data["Metric_Name"]}',
-        line_color=get_color_for_classification(metric_data["Classification"]),
-        fillcolor=get_color_for_classification(metric_data["Classification"], alpha=0.2)
-    ))
-    
-    # Add a reference "perfect" metric
-    fig.add_trace(go.Scatterpolar(
-        r=[1, 1, 1, 1, 1, 1, 1],
-        theta=categories,
-        fill='none',
-        name='Ideal Metric',
-        line=dict(color='gray', dash='dash')
-    ))
-    
-    # Customize the appearance
-    fig.update_layout(
-        polar=dict(
-            radialaxis=dict(
-                visible=True,
-                range=[0, 1]
-            )
-        ),
-        title=f"Metric Analysis: {metric_data['Metric_Name']}",
-        showlegend=True
+    # Create bar chart
+    fig = px.bar(
+        factor_df,
+        y="Factor",
+        x="Value",
+        orientation='h',
+        color="Value",
+        color_discrete_map={0: "#e74c3c", 1: "#2ecc71"},
+        title=f"Value Factors: {metric_data['Metric_Name']}",
+        text=["No", "No", "No", "No", "No", "No"]
     )
     
+    # Update the text to show Yes/No
+    for i, value in enumerate(values):
+        fig.data[0].text[i] = "Yes" if value == 1 else "No"
+    
+    # Customize appearance
+    fig.update_layout(
+        xaxis_title="",
+        xaxis=dict(
+            tickmode='array',
+            tickvals=[0, 1],
+            ticktext=['No', 'Yes'],
+            range=[-0.1, 1.1]
+        ),
+        yaxis_title="",
+        plot_bgcolor='rgba(248, 248, 248, 0.95)',
+        paper_bgcolor='white',
+        font=dict(size=14),
+        height=400
+    )
+    
+    # Remove legend
+    fig.update_layout(showlegend=False)
+    
+    # Update text position
+    fig.update_traces(textposition='inside', insidetextanchor='middle')
+    
     return fig
+
+def create_top_metrics_table(df, top_n=5):
+    """
+    Create a styled HTML table for the top metrics.
+    
+    Args:
+        df: DataFrame with the top metrics
+        top_n: Number of top metrics to show
+    
+    Returns:
+        HTML for styled table
+    """
+    # Limit to top N rows
+    df = df.head(top_n)
+    
+    # Select and rename columns for display
+    display_df = df[["Department", "Metric_Name", "Score"]].copy()
+    display_df.columns = ["Department", "Metric", "Value Score"]
+    
+    # Format the score as percentage
+    display_df["Value Score"] = display_df["Value Score"].map("{:.0%}".format)
+    
+    # Convert to HTML with styling
+    html = display_df.to_html(
+        index=False,
+        classes=["table", "table-striped", "table-hover"],
+        border=0
+    )
+    
+    # Add custom CSS
+    styled_html = f"""
+    <style>
+    table {{
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 16px;
+    }}
+    th {{
+        background-color: #2c3e50;
+        color: white;
+        text-align: left;
+        padding: 12px;
+    }}
+    td {{
+        padding: 10px;
+        border-bottom: 1px solid #ddd;
+    }}
+    tr:nth-child(even) {{
+        background-color: #f8f9fa;
+    }}
+    tr:hover {{
+        background-color: #e9ecef;
+    }}
+    </style>
+    {html}
+    """
+    
+    return styled_html
 
 def get_color_for_classification(classification, alpha=1.0):
     """Get color for a classification category."""
     colors = {
         "High Impact": f"rgba(46, 204, 113, {alpha})",
-        "Vanity": f"rgba(241, 196, 15, {alpha})",
-        "Remove": f"rgba(231, 76, 60, {alpha})",
-        "Improve": f"rgba(52, 152, 219, {alpha})"
+        "Vanity": f"rgba(231, 76, 60, {alpha})"
     }
     return colors.get(classification, f"rgba(149, 165, 166, {alpha})")
