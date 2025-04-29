@@ -29,7 +29,7 @@ and recommend eliminating vanity metrics that don't drive decision-making.
 """)
 
 # Sidebar
-st.sidebar.image("https://images.unsplash.com/photo-1542744173-05336fcc7ad4", use_container_width=True)
+st.sidebar.image("https://images.unsplash.com/photo-1542744173-05336fcc7ad4", use_column_width=True)
 st.sidebar.title("KPI Audit Controls")
 
 # Data upload
@@ -134,7 +134,7 @@ if df is not None:
     
     with tab1:
         st.header("Metrics Health Dashboard")
-        st.image("https://images.unsplash.com/photo-1560472354-b33ff0c44a43", use_container_width=True)
+        st.image("https://images.unsplash.com/photo-1560472354-b33ff0c44a43", use_column_width=True)
         
         # Key metrics
         col1, col2, col3, col4 = st.columns(4)
@@ -163,7 +163,7 @@ if df is not None:
         
     with tab2:
         st.header("Metric Analysis")
-        st.image("https://images.unsplash.com/photo-1591696205602-2f950c417cb9", use_container_width=True)
+        st.image("https://images.unsplash.com/photo-1591696205602-2f950c417cb9", use_column_width=True)
         
         # Metrics classification
         st.subheader("Metrics Classification")
@@ -221,7 +221,7 @@ if df is not None:
     
     with tab3:
         st.header("Department Insights")
-        st.image("https://images.unsplash.com/photo-1556155092-490a1ba16284", use_container_width=True)
+        st.image("https://images.unsplash.com/photo-1556155092-490a1ba16284", use_column_width=True)
         
         # Department selection for detailed view
         dept_options = sorted(df["Department"].unique().tolist())
@@ -296,7 +296,7 @@ if df is not None:
         
     with tab4:
         st.header("KPI Recommendations")
-        st.image("https://images.unsplash.com/photo-1484069560501-87d72b0c3669", use_container_width=True)
+        st.image("https://images.unsplash.com/photo-1484069560501-87d72b0c3669", use_column_width=True)
         
         # Get recommendations
         keep, remove, improve, duplicate = get_recommendations(analysis_df)
