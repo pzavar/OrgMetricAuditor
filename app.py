@@ -669,20 +669,31 @@ if df is not None:
                         # Add a divider between metrics
                         st.markdown("---")
             
-            # Business impact analysis
-            st.markdown("""
-            #### Business Impact Assessment
+            # Business impact analysis with improved readability
+            st.markdown("#### Business Impact Assessment")
+            st.markdown("Metric fragmentation introduces several enterprise risks and opportunity costs:")
             
-            Metric fragmentation introduces several enterprise risks and opportunity costs:
+            # Creating a custom styled table with better contrast
+            impact_data = [
+                ["Data Integrity", "Inconsistent definitions and calculation methodologies", "High"],
+                ["Decision Alignment", "Departments using different values for same business concept", "High"],
+                ["Resource Efficiency", "Duplicate data collection, validation, and reporting effort", "Medium"],
+                ["Analytics Effectiveness", "Analytical resources spread across redundant metrics", "Medium"],
+                ["Organizational Trust", "Stakeholder confusion and credibility challenges", "High"]
+            ]
             
-            | Impact Area | Implications | Risk Level |
-            |------------|--------------|------------|
-            | **Data Integrity** | Inconsistent definitions and calculation methodologies | High |
-            | **Decision Alignment** | Departments using different values for same business concept | High |
-            | **Resource Efficiency** | Duplicate data collection, validation, and reporting effort | Medium |
-            | **Analytics Effectiveness** | Analytical resources spread across redundant metrics | Medium |
-            | **Organizational Trust** | Stakeholder confusion and credibility challenges | High |
-            """)
+            # Create DataFrame for display
+            impact_df = pd.DataFrame(
+                impact_data, 
+                columns=["Impact Area", "Implications", "Risk Level"]
+            )
+            
+            # Display as styled DataFrame with good contrast
+            st.dataframe(
+                impact_df,
+                use_container_width=True,
+                hide_index=True
+            )
             
             # Recommendations for metric duplication
             st.markdown("#### Recommendations for Metric Duplication")
