@@ -42,7 +42,8 @@ st.sidebar.title("KPI Audit Controls")
 st.sidebar.header("1. Data Input")
 upload_option = st.sidebar.radio(
     "Choose data source:",
-    ["Use sample data", "Upload CSV file"]
+    ["Use sample data", "Upload CSV file"],
+    index=0  # Default to sample data
 )
 
 # Template download section
@@ -296,8 +297,8 @@ if df is not None:
         
         # Create a metrics summary counter at the top
         col1, col2 = st.columns(2)
-        col1.metric("High Impact Metrics", high_impact, f"{high_impact_pct:.0%}")
-        col2.metric("Vanity Metrics", vanity, f"{vanity_pct:.0%}")
+        col1.metric("High Impact Metrics", high_impact)
+        col2.metric("Vanity Metrics", vanity)
         
         st.markdown("---")
         
@@ -308,7 +309,7 @@ if df is not None:
         developed for Fortune 100 companies. Our assessment identifies critical metrics driving business outcomes while 
         surfacing metrics that consume resources without proportionate value creation.
         
-        The analysis reveals a **{high_impact_pct:.0%} efficiency ratio** in your measurement framework, 
+        The analysis reveals **{high_impact} high-impact metrics** in your measurement framework, 
         indicating {"significant" if high_impact_pct < 0.3 else "moderate" if high_impact_pct < 0.5 else "limited"} 
         opportunity to optimize your organization's measurement strategy and resource allocation.
         """)
