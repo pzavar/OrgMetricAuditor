@@ -296,8 +296,8 @@ if df is not None:
         
         # Create a metrics summary counter at the top
         col1, col2 = st.columns(2)
-        col1.metric("High Impact Metrics", high_impact, f"{high_impact_pct:.0%}")
-        col2.metric("Vanity Metrics", vanity, f"{vanity_pct:.0%}")
+        col1.metric("High Impact Metrics", high_impact)
+        col2.metric("Vanity Metrics", vanity)
         
         st.markdown("---")
         
@@ -839,7 +839,6 @@ if df is not None:
         col2.metric(
             "KPI Governance Maturity", 
             f"{governance_maturity_pct:.0f}%",
-            f"{'+' if governance_maturity_pct-50 > 0 else ''}{governance_maturity_pct-50:.0f}% vs benchmark",
             help="Assessment of your organization's measurement governance relative to industry benchmarks"
         )
         
