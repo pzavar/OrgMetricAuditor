@@ -3,6 +3,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import numpy as np
+import os
 from io import StringIO
 
 from utils import preprocess_data, load_sample_data, validate_csv_format, get_sample_csv_content
@@ -27,6 +28,11 @@ st.set_page_config(
     page_icon="📊",
     layout="wide"
 )
+
+# Configure app to run on port 5000
+os.environ['STREAMLIT_SERVER_PORT'] = '5000'
+os.environ['STREAMLIT_SERVER_HEADLESS'] = 'true'
+os.environ['STREAMLIT_SERVER_ADDRESS'] = '0.0.0.0'
 
 # Page title and description
 st.title("KPI Audit Tool")
