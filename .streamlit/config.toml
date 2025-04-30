@@ -4,3 +4,6 @@ port = 5000
 address = "0.0.0.0"
 enableXsrfProtection = false
 enableCORS = false
+
+[browser]
+gatherUsageStats = false

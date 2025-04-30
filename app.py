@@ -29,10 +29,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Configure app to run on port 5000
-os.environ['STREAMLIT_SERVER_PORT'] = '5000'
-os.environ['STREAMLIT_SERVER_HEADLESS'] = 'true'
-os.environ['STREAMLIT_SERVER_ADDRESS'] = '0.0.0.0'
+# Streamlit will use the configuration from .streamlit/config.toml
 
 # Page title and description
 st.title("KPI Audit Tool")
