@@ -168,16 +168,7 @@ if df is not None:
         else:
             st.sidebar.success(f"Showing {len(filtered_df)} of {len(df)} metrics")
     
-    # Search functionality
-    st.sidebar.header("3. Search")
-    search_term = st.sidebar.text_input("Search metrics by name or notes")
-    if search_term:
-        search_term = search_term.lower()
-        search_mask = (
-            filtered_df["Metric_Name"].str.lower().str.contains(search_term) | 
-            filtered_df["Interpretation_Notes"].str.lower().str.contains(search_term)
-        )
-        filtered_df = filtered_df[search_mask]
+    # Search functionality was removed as it wasn't working correctly
     
     # Define default weights
     default_weights = {
@@ -193,7 +184,7 @@ if df is not None:
         st.session_state.weights = default_weights.copy()
     
     # Add settings expander (hidden by default)
-    st.sidebar.header("4. Advanced Settings")
+    st.sidebar.header("3. Advanced Settings")
     with st.sidebar.expander("Analysis Settings", expanded=False):
         # Create a form for the settings
         with st.form(key="analysis_settings"):
