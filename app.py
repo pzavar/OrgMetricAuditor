@@ -585,13 +585,11 @@ if df is not None:
             # Create metrics for duplicate impact
             col1, col2, col3 = st.columns(3)
             
-            # Metric 1: Duplication rate
-            unique_metrics_count = len(set(filtered_df["Metric_Name"]))
-            duplication_rate = duplicate_count / unique_metrics_count if unique_metrics_count > 0 else 0
+            # Metric 1: Duplication count
             col1.metric(
-                "Metric Duplication Rate", 
-                f"{duplication_rate:.0%}",
-                help="Percentage of unique metrics duplicated across multiple departments"
+                "Duplicate Metrics", 
+                f"{duplicate_count}",
+                help="Number of metrics duplicated across multiple departments"
             )
             
             # Metric 2: Most fragmented metric
@@ -601,18 +599,21 @@ if df is not None:
                 duplicate_count = len(most_duplicated[1])
                 col2.metric(
                     "Most Fragmented Metric", 
-                    most_duplicated_metric, 
-                    f"In {duplicate_count} departments",
+                    most_duplicated_metric,
                     help="The metric with the highest degree of duplication across departments"
                 )
             
             # Metric 3: Data inconsistency risk
-            # Simulate risk score based on duplication patterns (higher is worse)
+            # Determine risk level based on duplication count
             if duplicate_metrics:
-                # Calculate risk as function of duplication rate and max duplication
-                risk_score = (duplication_rate * 0.5 + 
-                             (max([len(depts) for _, depts in duplicate_metrics.items() if len(depts) > 1]) / 10) * 0.5) * 100
-                risk_level = "High" if risk_score > 60 else "Medium" if risk_score > 30 else "Low"
+                # Simple risk calculation based on duplicate counts
+                if duplicate_count > 5:
+                    risk_level = "High"
+                elif duplicate_count > 2:
+                    risk_level = "Medium"
+                else:
+                    risk_level = "Low"
+                    
                 col3.metric(
                     "Alignment Risk Level", 
                     risk_level,
@@ -758,7 +759,8 @@ if df is not None:
         if len(vanity_metrics_df) > 0:
             vanity_table = vanity_metrics_df[["Department", "Metric_Name", "Score", "Interpretation_Notes"]].copy()
             vanity_table.columns = ["Department", "Metric", "Value Score", "Notes"]
-            vanity_table["Value Score"] = vanity_table["Value Score"].map("{:.0%}".format)
+            # Convert score to 0-10 scale instead of percentage
+            vanity_table["Value Score"] = (vanity_table["Value Score"] * 10).round(1)
             
             st.dataframe(vanity_table, use_container_width=True)
         else:
@@ -860,7 +862,7 @@ if df is not None:
                     st.markdown(f"**Department:** {metric_data['Department']}")
                     st.markdown(f"**Metric Name:** {metric_data['Metric_Name']}")
                     st.markdown(f"**Classification:** {metric_data['Classification']}")
-                    st.markdown(f"**Value Score:** {metric_data['Score']:.0%}")
+                    st.markdown(f"**Value Score:** {(metric_data['Score'] * 10):.1f}/10")
                     
                     # Additional details
                     st.markdown("#### Metric Details")

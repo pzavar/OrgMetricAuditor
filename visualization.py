@@ -32,13 +32,12 @@ def create_key_metrics_breakdown(df):
         text="Count"
     )
     
-    # Add percentage labels
-    total = class_counts["Count"].sum()
+    # Add count labels
     for i, row in class_counts.iterrows():
         fig.add_annotation(
             y=row["Classification"],
             x=row["Count"],
-            text=f"{row['Count']/total:.0%}",
+            text=f"{row['Count']} metrics",
             showarrow=False,
             xshift=25,
             font=dict(
@@ -256,8 +255,8 @@ def create_top_metrics_table(df, top_n=5):
     display_df = df[["Department", "Metric_Name", "Score"]].copy()
     display_df.columns = ["Department", "Metric", "Value Score"]
     
-    # Format the score as percentage
-    display_df["Value Score"] = display_df["Value Score"].map("{:.0%}".format)
+    # Format the score on a 0-10 scale
+    display_df["Value Score"] = (display_df["Value Score"] * 10).round(1).map("{:.1f}/10".format)
     
     # Convert to HTML with styling
     html = display_df.to_html(
