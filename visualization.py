@@ -186,7 +186,7 @@ def create_metric_value_factors(metric_data):
         x="Value",
         orientation='h',
         color="Value",
-        color_discrete_map={0: "#e74c3c", 1: "#3498db"},
+        color_discrete_map={0: "#e74c3c", 1: "#27ae60"},
         title=f"Value Factors: {metric_data['Metric_Name']}",
         text=["No", "No", "No", "No", "No", "No"]
     )
