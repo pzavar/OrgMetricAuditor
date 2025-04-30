@@ -74,9 +74,9 @@ def preprocess_data(df):
         is_valid, error_message = validate_csv_format(df)
         if not is_valid:
             raise ValueError(error_message)
-    
-    # Make a copy to avoid modifying the original
-    processed_df = df.copy()
+        
+        # Make a copy to avoid modifying the original
+        processed_df = df.copy()
     
     # Convert columns to appropriate data types
     bool_columns = ['Visible_in_Dashboard', 'Used_in_Decision_Making', 'Executive_Requested']
