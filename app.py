@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 import numpy as np
 from io import StringIO
 
-from utils import preprocess_data, load_sample_data
+from utils import preprocess_data, load_sample_data, validate_csv_format, get_sample_csv_content
 from analysis import (
     calculate_metric_scores, 
     classify_metrics, 
