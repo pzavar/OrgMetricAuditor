@@ -22,12 +22,30 @@ from visualization import (
     get_color_for_classification
 )
 
-# Set page config
-st.set_page_config(
-    page_title="KPI Audit Tool",
-    page_icon="📊",
-    layout="wide"
-)
+def handle_error(func):
+    """Decorator for handling exceptions in Streamlit app"""
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            st.error(f"An error occurred: {str(e)}")
+            if isinstance(e, (ValueError, TypeError)):
+                st.info("Please check your input data format and try again.")
+            else:
+                st.info("An unexpected error occurred. Please try again or contact support.")
+    return wrapper
+
+@handle_error
+def main():
+    # Set page config
+    st.set_page_config(
+        page_title="KPI Audit Tool",
+        page_icon="📊",
+        layout="wide"
+    )
+
+if __name__ == "__main__":
+    main()
 
 # Streamlit will use the configuration from .streamlit/config.toml
 

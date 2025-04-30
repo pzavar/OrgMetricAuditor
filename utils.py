@@ -63,11 +63,17 @@ def preprocess_data(df):
     
     Raises:
         ValueError: If the DataFrame doesn't have the required format
+        TypeError: If input is not a DataFrame
+        Exception: For other processing errors
     """
-    # Validate format first
-    is_valid, error_message = validate_csv_format(df)
-    if not is_valid:
-        raise ValueError(error_message)
+    if not isinstance(df, pd.DataFrame):
+        raise TypeError("Input must be a pandas DataFrame")
+        
+    try:
+        # Validate format first
+        is_valid, error_message = validate_csv_format(df)
+        if not is_valid:
+            raise ValueError(error_message)
     
     # Make a copy to avoid modifying the original
     processed_df = df.copy()
