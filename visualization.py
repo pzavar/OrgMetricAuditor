@@ -12,23 +12,9 @@ def create_key_metrics_breakdown(df):
     
     Returns:
         Plotly figure object
-    
-    Raises:
-        ValueError: If DataFrame is empty or missing required columns
-        TypeError: If input is not a DataFrame
     """
-    if not isinstance(df, pd.DataFrame):
-        raise TypeError("Input must be a pandas DataFrame")
-        
-    if df.empty:
-        raise ValueError("DataFrame is empty")
-        
-    if "Classification" not in df.columns:
-        raise ValueError("DataFrame missing required column 'Classification'")
-        
-    try:
-        # Count metrics by classification
-        class_counts = df["Classification"].value_counts().reset_index()
+    # Count metrics by classification
+    class_counts = df["Classification"].value_counts().reset_index()
     class_counts.columns = ["Classification", "Count"]
     
     # Create horizontal bar chart with value counts

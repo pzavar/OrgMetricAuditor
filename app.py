@@ -3,10 +3,9 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import numpy as np
-import os
 from io import StringIO
 
-from utils import preprocess_data, load_sample_data, validate_csv_format, get_sample_csv_content
+from utils import preprocess_data, load_sample_data
 from analysis import (
     calculate_metric_scores, 
     classify_metrics, 
@@ -22,32 +21,12 @@ from visualization import (
     get_color_for_classification
 )
 
-def handle_error(func):
-    """Decorator for handling exceptions in Streamlit app"""
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except Exception as e:
-            st.error(f"An error occurred: {str(e)}")
-            if isinstance(e, (ValueError, TypeError)):
-                st.info("Please check your input data format and try again.")
-            else:
-                st.info("An unexpected error occurred. Please try again or contact support.")
-    return wrapper
-
-@handle_error
-def main():
-    # Set page config
-    st.set_page_config(
-        page_title="KPI Audit Tool",
-        page_icon="📊",
-        layout="wide"
-    )
-
-if __name__ == "__main__":
-    main()
-
-# Streamlit will use the configuration from .streamlit/config.toml
+# Set page config
+st.set_page_config(
+    page_title="KPI Audit Tool",
+    page_icon="📊",
+    layout="wide"
+)
 
 # Page title and description
 st.title("KPI Audit Tool")
@@ -63,8 +42,7 @@ st.sidebar.title("KPI Audit Controls")
 st.sidebar.header("1. Data Input")
 upload_option = st.sidebar.radio(
     "Choose data source:",
-    ["Use sample data", "Upload CSV file"],
-    index=0  # Default to sample data
+    ["Use sample data", "Upload CSV file"]
 )
 
 # Template download section
@@ -158,19 +136,44 @@ if df is not None:
     departments = ["All Departments"] + sorted(df["Department"].unique().tolist())
     selected_department = st.sidebar.selectbox("Filter by Department", departments)
     
-    # Filter data based on department selection
+    # Get unique metric types across the dataset
+    unique_metrics = sorted(df["Metric_Name"].unique().tolist())
+    metric_types = ["All Metrics"] + unique_metrics
+    selected_metric = st.sidebar.selectbox("Filter by Metric Type", metric_types)
+    
+    # Filter data based on selection - apply department filter first
     filtered_df = df.copy()
     if selected_department != "All Departments":
         filtered_df = filtered_df[filtered_df["Department"] == selected_department]
+    
+    # Then apply metric type filter if selected
+    if selected_metric != "All Metrics":
+        filtered_df = filtered_df[filtered_df["Metric_Name"] == selected_metric]
         
-        # Show filter status
-        st.sidebar.info(f"Filtering by Department: {selected_department}")
+    # Show filter status
+    if selected_department != "All Departments" or selected_metric != "All Metrics":
+        filter_status = []
+        if selected_department != "All Departments":
+            filter_status.append(f"Department: {selected_department}")
+        if selected_metric != "All Metrics":
+            filter_status.append(f"Metric: {selected_metric}")
+        
+        st.sidebar.info(f"Filtering by: {', '.join(filter_status)}")
         if len(filtered_df) == 0:
             st.sidebar.warning("No metrics match your filter criteria. Try adjusting filters.")
         else:
             st.sidebar.success(f"Showing {len(filtered_df)} of {len(df)} metrics")
     
-    # Search functionality was removed as it wasn't working correctly
+    # Search functionality
+    st.sidebar.header("3. Search")
+    search_term = st.sidebar.text_input("Search metrics by name or notes")
+    if search_term:
+        search_term = search_term.lower()
+        search_mask = (
+            filtered_df["Metric_Name"].str.lower().str.contains(search_term) | 
+            filtered_df["Interpretation_Notes"].str.lower().str.contains(search_term)
+        )
+        filtered_df = filtered_df[search_mask]
     
     # Define default weights
     default_weights = {
@@ -186,7 +189,7 @@ if df is not None:
         st.session_state.weights = default_weights.copy()
     
     # Add settings expander (hidden by default)
-    st.sidebar.header("3. Advanced Settings")
+    st.sidebar.header("4. Advanced Settings")
     with st.sidebar.expander("Analysis Settings", expanded=False):
         # Create a form for the settings
         with st.form(key="analysis_settings"):
@@ -293,8 +296,8 @@ if df is not None:
         
         # Create a metrics summary counter at the top
         col1, col2 = st.columns(2)
-        col1.metric("High Impact Metrics", high_impact)
-        col2.metric("Vanity Metrics", vanity)
+        col1.metric("High Impact Metrics", high_impact, f"{high_impact_pct:.0%}")
+        col2.metric("Vanity Metrics", vanity, f"{vanity_pct:.0%}")
         
         st.markdown("---")
         
@@ -305,7 +308,7 @@ if df is not None:
         developed for Fortune 100 companies. Our assessment identifies critical metrics driving business outcomes while 
         surfacing metrics that consume resources without proportionate value creation.
         
-        The analysis reveals **{high_impact} high-impact metrics** in your measurement framework, 
+        The analysis reveals a **{high_impact_pct:.0%} efficiency ratio** in your measurement framework, 
         indicating {"significant" if high_impact_pct < 0.3 else "moderate" if high_impact_pct < 0.5 else "limited"} 
         opportunity to optimize your organization's measurement strategy and resource allocation.
         """)
@@ -346,11 +349,11 @@ if df is not None:
         ### Strategic Implications
         
         1. **Measurement Efficiency Gap:** {"A critical" if high_impact_pct < 0.3 else "A significant" if high_impact_pct < 0.5 else "A"} 
-           proportion of metrics ({vanity} of {total_metrics}) are not driving organizational value, creating opportunity costs 
+           proportion of metrics ({vanity_pct:.0%}) are not driving organizational value, creating opportunity costs 
            through unnecessary reporting and analysis efforts.
         
-        2. **Decision Support Effectiveness:** Only {high_impact} of your {total_metrics} metrics directly inform decision-making, 
-           {"substantially below" if high_impact_pct < 0.3 else "below" if high_impact_pct < 0.5 else "near"} industry benchmark 
+        2. **Decision Support Effectiveness:** Only {high_impact_pct:.0%} of your metrics directly inform decision-making, 
+           {"substantially below" if high_impact_pct < 0.3 else "below" if high_impact_pct < 0.5 else "near"} industry benchmark of 45-55% 
            for high-performing organizations.
         
         3. **Organizational Alignment:** {"Significant" if duplicate_count > 5 else "Some" if duplicate_count > 0 else "No"} metric duplication 
@@ -380,12 +383,12 @@ if df is not None:
             
             # Display high-impact metrics with detailed consulting analysis
             for idx, row in top_metrics_df.iterrows():
-                with st.expander(f"{row['Department']} - {row['Metric_Name']} (Score: {row['Score']*10:.1f}/10)"):
+                with st.expander(f"{row['Department']} - {row['Metric_Name']} ({row['Score']:.0%})"):
                     col1, col2 = st.columns([2, 1])
                     
                     with col1:
                         st.markdown(f"**Department:** {row['Department']}")
-                        st.markdown(f"**Value Score:** {(row['Score']*10):.1f}/10")
+                        st.markdown(f"**Value Score:** {row['Score']:.0%}")
                         
                         # Generate justification based on data with more consultant language
                         justifications = []
@@ -498,12 +501,12 @@ if df is not None:
             
             # Display top vanity metrics with consultant-style justification
             for idx, row in vanity_metrics_df.iterrows():
-                with st.expander(f"{row['Department']} - {row['Metric_Name']} (Score: {row['Score']*10:.1f}/10)"):
+                with st.expander(f"{row['Department']} - {row['Metric_Name']} ({row['Score']:.0%})"):
                     col1, col2 = st.columns([2, 1])
                     
                     with col1:
                         st.markdown(f"**Department:** {row['Department']}")
-                        st.markdown(f"**Value Score:** {(row['Score']*10):.1f}/10")
+                        st.markdown(f"**Value Score:** {row['Score']:.0%}")
                         
                         # Generate justification based on data with consulting terminology
                         reasons = []

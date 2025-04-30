@@ -12,27 +12,10 @@ def calculate_metric_scores(df, weights=None):
         
     Returns:
         Dictionary with metric index as key and score as value
-        
-    Raises:
-        ValueError: If weights don't sum to 1 or DataFrame is invalid
-        TypeError: If inputs are of wrong type
     """
-    if not isinstance(df, pd.DataFrame):
-        raise TypeError("Input must be a pandas DataFrame")
-        
-    required_columns = ["Used_in_Decision_Making", "Visible_in_Dashboard", 
-                       "Executive_Requested", "Review_Score", "Usage_Score"]
-    missing_cols = [col for col in required_columns if col not in df.columns]
-    if missing_cols:
-        raise ValueError(f"Missing required columns: {', '.join(missing_cols)}")
-        
-    if weights is not None and not isinstance(weights, dict):
-        raise TypeError("Weights must be a dictionary")
-        
-    try:
-        # Default weights if none provided - heavily weight decision making
-        if weights is None:
-            weights = {
+    # Default weights if none provided - heavily weight decision making
+    if weights is None:
+        weights = {
             "Used_in_Decision_Making": 0.5,  # Heavily weight actual decision usage
             "Visible_in_Dashboard": 0.1,
             "Executive_Requested": 0.1,
