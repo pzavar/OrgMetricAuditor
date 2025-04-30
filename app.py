@@ -323,29 +323,24 @@ if df is not None:
         health_col1.metric(
             "Decision-Driving Metrics", 
             f"{high_impact}/{total_metrics}",
-            f"{high_impact_pct:.0%}",
             help="Metrics directly influencing business decisions and outcomes"
         )
         
         # Metrics in the second column
         decision_making_count = sum(filtered_df["Used_in_Decision_Making"])
-        decision_making_pct = decision_making_count/total_metrics
         health_col2.metric(
             "Decision Utilization", 
             f"{decision_making_count}/{total_metrics}",
-            f"{decision_making_pct:.0%}",
             help="Percentage of metrics actively leveraged in decision-making processes"
         )
         
         # Metrics in the third column - Duplicate Metrics ratio
         duplicate_count = sum(1 for metric, depts in duplicate_metrics.items() if len(depts) > 1) if duplicate_metrics else 0
         unique_metrics_count = len(set(filtered_df["Metric_Name"]))
-        duplication_ratio = duplicate_count / unique_metrics_count if unique_metrics_count > 0 else 0
         
         health_col3.metric(
             "Metric Redundancy", 
             f"{duplicate_count} metrics",
-            f"{duplication_ratio:.0%}",
             help="Degree of metric duplication across departments, indicating siloed measurement"
         )
         
@@ -355,7 +350,7 @@ if df is not None:
         
         1. **Measurement Efficiency Gap:** {"A critical" if high_impact_pct < 0.3 else "A significant" if high_impact_pct < 0.5 else "A"} 
            proportion of metrics ({vanity_pct:.0%}) are not driving organizational value, creating opportunity costs 
-           estimated at {vanity*2.5:.0f}-{vanity*5:.0f} person-hours per reporting cycle.
+           through unnecessary reporting and analysis efforts.
         
         2. **Decision Support Effectiveness:** Only {high_impact_pct:.0%} of your metrics directly inform decision-making, 
            {"substantially below" if high_impact_pct < 0.3 else "below" if high_impact_pct < 0.5 else "near"} industry benchmark of 45-55% 
@@ -466,25 +461,16 @@ if df is not None:
                             st.progress(health_score/100)
                             st.markdown("**Requires Intervention**")
             
-            # Strategic recommendations for high-impact metrics
-            st.markdown("### Implementation Roadmap")
+            # General recommendations for high-impact metrics
+            st.markdown("### High-Impact Metrics Recommendations")
             st.markdown("""
-            **90-Day Action Plan for High-Impact Metrics:**
+            To maximize the value of your high-impact metrics:
             
-            1. **Governance Formalization (Weeks 1-4)**
-               * Establish clear ownership for each high-impact metric
-               * Document data sources, collection methodology, and calculation formulas
-               * Implement data quality control procedures
-            
-            2. **Integration Enhancement (Weeks 5-8)**
-               * Map each metric to specific business decisions it informs
-               * Create standardized reporting templates with actionable insights
-               * Develop threshold-based alerts for significant metric movements
-            
-            3. **Organizational Alignment (Weeks 9-12)**
-               * Conduct cross-functional workshops on metric interpretation
-               * Train leadership on contextualizing metrics for strategic planning
-               * Establish quarterly metric review cadence with executive sponsorship
+            * Establish clear ownership for each high-impact metric
+            * Document data sources, collection methodology, and calculation formulas
+            * Map each metric to specific business decisions it informs
+            * Create standardized reporting templates with actionable insights
+            * Ensure consistent review cadences for these mission-critical measures
             """)
         else:
             st.warning("""
@@ -497,34 +483,20 @@ if df is not None:
             Consider a deeper review of how metrics inform business decisions.
             """)
         
-        # Analysis of Vanity Metrics with McKinsey consulting approach
-        st.markdown("### Resource Optimization Opportunities")
+        # Analysis of Vanity Metrics
+        st.markdown("### Vanity Metrics Analysis")
         
         if len(vanity_metrics_df) > 0:
             st.markdown("""
-            Our analysis identified the following metrics as **opportunity areas for resource optimization**. 
-            These KPIs demonstrate limited decision-making utility while consuming organizational resources for 
-            collection, monitoring, and reporting.
+            Our analysis identified the following metrics as demonstrating limited business value.
+            These KPIs have minimal connection to decision-making while consuming organizational resources.
             
-            **Resource allocation optimization factors:**
+            **Limited value indicators:**
             
             1. **Business impact assessment:** Limited correlation with business outcomes
-            2. **Operational efficiency:** Resource costs exceed realized business value
-            3. **Decision utility:** Low integration with critical business decisions
+            2. **Decision utility:** Low integration with critical business decisions
+            3. **Review frequency:** Infrequent evaluation and usage in business processes
             4. **Organizational momentum:** Metrics that persist due to historical precedent rather than current value
-            """)
-            
-            # Calculate total estimated annual cost for all vanity metrics
-            # Assuming conservative estimates of resources required per metric
-            avg_hours_per_metric_monthly = 3.5  # Average hours spent per month per metric
-            hourly_cost_estimate = 85  # Blended hourly rate for employees working with metrics
-            annual_vanity_cost = len(vanity_metrics_df) * avg_hours_per_metric_monthly * hourly_cost_estimate * 12
-            
-            # Display estimated cost impact
-            st.warning(f"""
-            **Estimated Efficiency Opportunity:** 
-            Optimizing these {len(vanity_metrics_df)} low-value metrics could reclaim approximately 
-            **${annual_vanity_cost:,.0f}** in annual resources and redirect focus to high-impact measurement activities.
             """)
             
             # Display top vanity metrics with consultant-style justification
@@ -559,16 +531,6 @@ if df is not None:
                             for r in reasons:
                                 st.markdown(r)
                         
-                        # Cost impact analysis
-                        monthly_hours = avg_hours_per_metric_monthly
-                        annual_cost = monthly_hours * hourly_cost_estimate * 12
-                        st.markdown("**Resource Impact Analysis:**")
-                        st.markdown(f"""
-                        - Estimated annual cost: **${annual_cost:,.0f}**
-                        - Maintenance: {monthly_hours:.1f} hours monthly
-                        - Opportunity cost: Diversion of analytical resources from high-impact activities
-                        """)
-                        
                         # Insufficient information disclaimer if needed
                         if len(reasons) <= 1:
                             st.markdown("""
@@ -586,7 +548,7 @@ if df is not None:
                         score = row["Score"]
                         if score < 0.2:
                             st.error("**Eliminate**")
-                            st.markdown("Critical candidate for immediate removal from reporting ecosystem")
+                            st.markdown("Consider removal from reporting ecosystem")
                         elif score < 0.4:
                             st.warning("**Deprioritize**")
                             st.markdown("Relocate to secondary dashboards with reduced refresh frequency")
@@ -594,58 +556,16 @@ if df is not None:
                             st.info("**Transform**")
                             st.markdown("Candidate for redefinition with clearer decision-making application")
             
-            # Strategic plan for handling vanity metrics
-            st.markdown("### Resource Optimization Strategy")
-            
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.markdown("#### Phase-Out Approach")
-                st.markdown("""
-                **60-Day Transition Plan:**
+            # General recommendations for vanity metrics
+            st.markdown("### Vanity Metrics Recommendations")
+            st.markdown("""
+            **General recommendations for low-value metrics:**
                 
-                1. **Documentation & Knowledge Transfer** (Days 1-15)
-                   * Catalog historical data and insights
-                   * Document any remaining use cases
-                   * Archive reports and dashboards
-                
-                2. **Stakeholder Communication** (Days 16-30)
-                   * Conduct impact assessment with stakeholders
-                   * Present alternative metrics for critical needs
-                   * Establish consensus on retirement timeline
-                
-                3. **Controlled Decommissioning** (Days 31-60)
-                   * Gradually reduce reporting frequency
-                   * Implement redirects to high-value alternatives
-                   * Monitor for unexpected impacts
-                """)
-            
-            with col2:
-                st.markdown("#### Value Reclamation")
-                st.markdown("""
-                **Resource Reallocation Opportunities:**
-                
-                1. **Analytical Capacity**
-                   * Redirect analytical resources to high-impact KPIs
-                   * Develop deeper insights on strategic metrics
-                   * Implement anomaly detection and predictive modeling
-                
-                2. **Technical Infrastructure**
-                   * Reduce dashboard complexity and loading times
-                   * Decrease data storage and processing requirements
-                   * Simplify maintenance and documentation burden
-                
-                3. **Organizational Focus**
-                   * Sharpen meeting agendas around actionable metrics
-                   * Reduce cognitive load for decision-makers
-                   * Establish clearer cause-effect relationships
-                """)
-            
-            # Bottom-line impact summary
-            st.success(f"""
-            **Bottom-Line Impact:** Optimizing these {len(vanity_metrics_df)} metrics would yield approximately 
-            {len(vanity_metrics_df) * avg_hours_per_metric_monthly * 12:.0f} person-hours annually that can be 
-            redirected to high-value analytics, representing a **${annual_vanity_cost:,.0f}** resource reallocation opportunity.
+            * Evaluate each metric against clear business objectives
+            * Consult stakeholders before removing any established metric
+            * Consider consolidating similar metrics into more meaningful composites
+            * Transition focus to metrics that directly inform business decisions
+            * Document rationale for any metric retirements or transformations
             """)
         
         # Duplicated Metrics Analysis - McKinsey style cross-functional optimization
@@ -666,8 +586,8 @@ if df is not None:
             col1, col2, col3 = st.columns(3)
             
             # Metric 1: Duplication rate
-            total_unique_metrics = len(set(filtered_df["Metric_Name"]))
-            duplication_rate = duplicate_count / total_unique_metrics if total_unique_metrics > 0 else 0
+            unique_metrics_count = len(set(filtered_df["Metric_Name"]))
+            duplication_rate = duplicate_count / unique_metrics_count if unique_metrics_count > 0 else 0
             col1.metric(
                 "Metric Duplication Rate", 
                 f"{duplication_rate:.0%}",
@@ -764,230 +684,37 @@ if df is not None:
             | **Organizational Trust** | Stakeholder confusion and credibility challenges | High |
             """)
             
-            # Strategic recommendations with consulting depth
-            st.markdown("#### Unification Strategy")
+            # Recommendations for metric duplication
+            st.markdown("#### Recommendations for Metric Duplication")
             
-            # Create two columns for the strategy components
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.markdown("**Governance Transformation**")
-                st.markdown("""
-                1. **Metric Rationalization**
-                   * Establish single source of truth for each business concept
-                   * Standardize definitions, algorithms, and data sources
-                   * Implement formal change management process
-                
-                2. **Ownership Framework**
-                   * Assign executive sponsors to metric domains
-                   * Establish primary business owners for each metric
-                   * Create cross-functional governance committee
-                """)
-            
-            with col2:
-                st.markdown("**Technical Integration**")
-                st.markdown("""
-                1. **Data Architecture**
-                   * Implement common data model for metrics
-                   * Establish centralized metrics repository
-                   * Deploy automated consistency validation
-                
-                2. **Delivery Standardization**
-                   * Create unified reporting ecosystem
-                   * Implement role-based access controls
-                   * Enable self-service with governance guardrails
-                """)
-            
-            # Implementation approach
-            st.markdown("#### Implementation Roadmap")
             st.markdown("""
-            **120-Day Metric Unification Program:**
+            To address metric duplication across departments:
             
-            | Phase | Timeline | Key Activities | Success Metrics |
-            |-------|----------|---------------|-----------------|
-            | **Discovery & Assessment** | Days 1-30 | Comprehensive metric inventory, stakeholder interviews, impact analysis | Complete metric catalog, prioritized unification targets |
-            | **Design & Alignment** | Days 31-60 | Definition standardization, ownership mapping, technical architecture | Approved metric standards, governance framework |
-            | **Implementation** | Days 61-90 | System integration, data unification, process deployment | Consolidated metrics in production |
-            | **Adoption & Optimization** | Days 91-120 | Training, monitoring, continuous improvement | Documented ROI, stakeholder adoption metrics |
+            * Establish a single source of truth for each business concept
+            * Standardize definitions and calculation methodologies
+            * Implement cross-functional metric ownership
+            * Create a centralized metrics dictionary
+            * Consolidate reporting to ensure consistent visibility
             """)
         
-        # Executive-level Strategic Recommendations - McKinsey style
-        st.subheader("Executive Roadmap")
+        # Strategic Recommendations
+        st.subheader("Strategic Recommendations")
         
-        # High-level strategic summary
         st.markdown("""
-        Based on our comprehensive analysis of your organization's measurement ecosystem, we've developed 
-        a strategic transformation roadmap to drive measurable business value through optimized KPI governance.
-        """)
+        Based on our comprehensive analysis of your organization's measurement ecosystem, we recommend 
+        focusing on the following key areas:
         
-        # Executive summary metrics
-        col1, col2, col3 = st.columns(3)
-        
-        # Calculate some high-level metrics for the executive summary
-        efficiency_opportunity = vanity_metrics_df.shape[0] * 3.5 * 85 * 12  # Annual savings from eliminating vanity metrics
-        high_value_percentage = high_impact / total_metrics if total_metrics > 0 else 0
-        governance_maturity = high_value_percentage * 0.7 + (1 - (duplicate_count / total_unique_metrics if total_unique_metrics > 0 else 0)) * 0.3
-        governance_maturity_pct = min(max(governance_maturity * 100, 0), 100)  # Scale 0-100%
-        
-        # Metrics display
-        col1.metric(
-            "Value Reclamation Opportunity", 
-            f"${efficiency_opportunity:,.0f}",
-            help="Annual resource value that can be reclaimed through metric rationalization"
-        )
-        
-        col2.metric(
-            "KPI Governance Maturity", 
-            f"{governance_maturity_pct:.0f}%",
-            f"{'+' if governance_maturity_pct-50 > 0 else ''}{governance_maturity_pct-50:.0f}% vs benchmark",
-            help="Assessment of your organization's measurement governance relative to industry benchmarks"
-        )
-        
-        col3.metric(
-            "Implementation Timeline", 
-            "90-120 days",
-            help="Estimated time to value for implementing the strategic recommendations"
-        )
-        
-        # Three-phase transformation approach
-        st.markdown("### Three-Phase Transformation Approach")
-        
-        # Phase tabs
-        phase1, phase2, phase3 = st.tabs(["Phase 1: Foundation", "Phase 2: Integration", "Phase 3: Optimization"])
-        
-        with phase1:
-            st.markdown("#### Phase 1: Foundation (Days 1-30)")
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.markdown("**Key Activities:**")
-                st.markdown("""
-                * Establish KPI Governance Council with cross-functional leadership
-                * Develop metric taxonomy and classification framework
-                * Conduct stakeholder impact assessment and change readiness
-                * Document current state metric definitions and sources
-                * Launch quick-win metric rationalization for critical duplication
-                """)
-            
-            with col2:
-                st.markdown("**Deliverables:**")
-                st.markdown("""
-                * Comprehensive KPI inventory with ownership mapping
-                * Governance charter and operating model
-                * Initial metric rationalization plan
-                * Executive briefing materials and business case
-                * Quick-win implementation roadmap
-                """)
-        
-        with phase2:
-            st.markdown("#### Phase 2: Integration (Days 31-60)")
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.markdown("**Key Activities:**")
-                st.markdown("""
-                * Implement standardized metric definitions and calculation methodologies
-                * Design tiered dashboard architecture with decision-mapping
-                * Develop data quality control protocols and validation routines
-                * Launch change management and communication campaign
-                * Establish metric review cadence and governance processes
-                """)
-            
-            with col2:
-                st.markdown("**Deliverables:**")
-                st.markdown("""
-                * Standardized metric dictionary and calculation documentation
-                * Data integration architecture and technical specifications
-                * Prototype dashboard with tiered access model
-                * Training materials and knowledge transfer documentation
-                * Governance process documentation and templates
-                """)
-        
-        with phase3:
-            st.markdown("#### Phase 3: Optimization (Days 61-120)")
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.markdown("**Key Activities:**")
-                st.markdown("""
-                * Implement comprehensive dashboard solution with tiered approach
-                * Deploy automated data quality monitoring and anomaly detection
-                * Conduct leadership workshops on strategic metric utilization
-                * Establish continuous improvement feedback mechanisms
-                * Develop advanced analytics capabilities on core metrics
-                """)
-            
-            with col2:
-                st.markdown("**Deliverables:**")
-                st.markdown("""
-                * Production dashboard environment with role-based access
-                * Automated data quality reports and exception handling
-                * Executive playbooks for metric-driven decision making
-                * Performance tracking against established baselines
-                * ROI and business impact assessment
-                """)
-        
-        # Value realization timeline
-        st.markdown("### Value Realization Timeline")
-        
-        # Create a table showing benefits over time
-        value_timeline = pd.DataFrame({
-            "Timeframe": ["30 Days", "60 Days", "90 Days", "120 Days", "6 Months"],
-            "Realized Benefits": [
-                "Elimination of 20% of duplicate metrics; Stakeholder alignment on critical KPIs",
-                "50% reduction in manual reporting effort; Implementation of standardized definitions",
-                "Dashboard consolidation complete; 80% of vanity metrics phased out",
-                "Complete metrics governance framework; Full leadership adoption",
-                "Measurable improvement in decision velocity; Quantified business impact"
-            ],
-            "Estimated Value": [
-                f"${efficiency_opportunity * 0.1:,.0f}",
-                f"${efficiency_opportunity * 0.3:,.0f}",
-                f"${efficiency_opportunity * 0.6:,.0f}",
-                f"${efficiency_opportunity * 0.9:,.0f}",
-                f"${efficiency_opportunity * 1.5:,.0f}+"
-            ]
-        })
-        
-        # Display as markdown table
-        markdown_table = "| Timeframe | Realized Benefits | Estimated Value |\n| --- | --- | --- |\n"
-        for _, row in value_timeline.iterrows():
-            markdown_table += f"| **{row['Timeframe']}** | {row['Realized Benefits']} | {row['Estimated Value']} |\n"
-        
-        st.markdown(markdown_table)
-        
-        # Critical success factors
-        st.markdown("### Critical Success Factors")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown("**Executive Sponsorship**")
-            st.markdown("""
-            * Active C-suite participation in governance council
-            * Visible leadership in adoption and change management
-            * Allocation of necessary resources and prioritization
-            * Regular review and accountability for implementation progress
-            """)
-        
-        with col2:
-            st.markdown("**Implementation Approach**")
-            st.markdown("""
-            * Agile, iterative implementation with clear success metrics
-            * Focus on quick wins to build momentum and demonstrate value
-            * Comprehensive training and knowledge transfer
-            * Balance of centralized governance with department flexibility
-            """)
-        
-        # Call to action
-        st.success("""
-        ### Next Steps
-        
-        1. **Executive Alignment Session** (Week 1): Secure leadership buy-in and resource commitment
-        2. **Governance Council Formation** (Week 2): Establish cross-functional ownership and accountability
-        3. **Quick-Win Implementation** (Weeks 3-4): Target high-value, low-complexity optimization opportunities
-        
-        Please schedule your Executive Alignment Session to begin your KPI transformation journey.
+        1. **Metric Rationalization:** Focus your resources on the high-impact metrics identified while 
+           reducing emphasis on metrics with limited decision-making utility
+           
+        2. **Standardization:** Establish consistent definitions, ownership, and review cadences for 
+           your critical metrics
+           
+        3. **Alignment:** Create clear connections between metrics and business objectives to ensure 
+           all measurement directly supports organizational goals
+           
+        4. **Governance:** Implement a formal review process to continuously evaluate metric relevance 
+           and effectiveness
         """)
         
     # Tab 2: Visualizations Tab
