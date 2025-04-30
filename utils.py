@@ -5,10 +5,10 @@ import io
 def validate_csv_format(df):
     """
     Validate that a DataFrame has the required columns and format.
-
+    
     Args:
         df: The pandas DataFrame to validate
-
+        
     Returns:
         tuple: (is_valid, error_message)
     """
@@ -23,63 +23,60 @@ def validate_csv_format(df):
         'Metric_Last_Used_For_Decision',
         'Interpretation_Notes'
     ]
-
+    
     # Check for missing columns
     missing_columns = [col for col in required_columns if col not in df.columns]
     if missing_columns:
         return False, f"Missing required columns: {', '.join(missing_columns)}"
-
+    
     # Check for Boolean columns format
     bool_columns = ['Visible_in_Dashboard', 'Used_in_Decision_Making', 'Executive_Requested']
     for col in bool_columns:
         invalid_values = df[col][~df[col].isin(['Yes', 'No'])].unique()
         if len(invalid_values) > 0:
             return False, f"Column '{col}' contains invalid values. Only 'Yes' or 'No' are allowed. Found: {list(invalid_values)}"
-
+    
     # Check for Last_Reviewed valid values
     review_values = ['This week', 'Last month', 'Last quarter', 'Unknown']
     invalid_reviews = df['Last_Reviewed'][~df['Last_Reviewed'].isin(review_values)].unique()
     if len(invalid_reviews) > 0:
         return False, f"Column 'Last_Reviewed' contains invalid values. Expected values: {review_values}. Found: {list(invalid_reviews)}"
-
+    
     # Check for Last_Used valid values
     usage_values = ['Recently', '2 weeks ago', 'Last quarter', 'Used in QBR', 'Never', "Don't know"]
     invalid_usage = df['Metric_Last_Used_For_Decision'][~df['Metric_Last_Used_For_Decision'].isin(usage_values)].unique()
     if len(invalid_usage) > 0:
         return False, f"Column 'Metric_Last_Used_For_Decision' contains invalid values. Expected values: {usage_values}. Found: {list(invalid_usage)}"
-
+    
     # All validations passed
     return True, ""
 
 def preprocess_data(df):
     """
     Preprocess the input data for analysis.
-
+    
     Args:
         df: DataFrame to preprocess
-
+        
     Returns:
         processed DataFrame
-
+    
     Raises:
         ValueError: If the DataFrame doesn't have the required format
     """
-    if not isinstance(df, pd.DataFrame):
-        raise TypeError("Input must be a pandas DataFrame")
-
     # Validate format first
     is_valid, error_message = validate_csv_format(df)
     if not is_valid:
         raise ValueError(error_message)
-
+    
     # Make a copy to avoid modifying the original
     processed_df = df.copy()
-
+    
     # Convert columns to appropriate data types
     bool_columns = ['Visible_in_Dashboard', 'Used_in_Decision_Making', 'Executive_Requested']
     for col in bool_columns:
         processed_df[col] = processed_df[col].map({'Yes': True, 'No': False})
-
+    
     # Convert review frequency to numerical score
     review_map = {
         'This week': 4,
@@ -88,7 +85,7 @@ def preprocess_data(df):
         'Unknown': 1
     }
     processed_df['Review_Score'] = processed_df['Last_Reviewed'].map(review_map)
-
+    
     # Convert usage frequency to numerical score
     usage_map = {
         'Recently': 4,
@@ -99,7 +96,7 @@ def preprocess_data(df):
         "Don't know": 1
     }
     processed_df['Usage_Score'] = processed_df['Metric_Last_Used_For_Decision'].map(usage_map)
-
+    
     # Score for interpretation notes (whether it's tied to real goals)
     processed_df['Notes_Score'] = processed_df['Interpretation_Notes'].apply(
         lambda x: 4 if 'real goals' in str(x).lower() else
@@ -107,7 +104,7 @@ def preprocess_data(df):
                   2 if 'frequently discussed' in str(x).lower() or 'updated manually' in str(x).lower() else
                   1 if 'vanity' in str(x).lower() or 'optics' in str(x).lower() else 2
     )
-
+    
     return processed_df
 
 def get_sample_csv_content():
@@ -178,9 +175,9 @@ def load_sample_data():
     """Load the sample data from the predefined CSV content."""
     # Get the CSV content
     csv_content = get_sample_csv_content()
-
+    
     # Load CSV content into a DataFrame
     df = pd.read_csv(io.StringIO(csv_content))
-
+    
     # Preprocess the data
     return preprocess_data(df)
