@@ -294,11 +294,7 @@ if df is not None:
     with tab1:
         st.header("KPI Audit Analysis")
         
-        # Create a metrics summary counter at the top
-        col1, col2 = st.columns(2)
-        col1.metric("High Impact Metrics", high_impact)
-        col2.metric("Vanity Metrics", vanity)
-        
+        # Leave space at the top
         st.markdown("---")
         
         # Executive Summary with McKinsey-style consulting depth
