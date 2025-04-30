@@ -140,29 +140,13 @@ if df is not None:
     departments = ["All Departments"] + sorted(df["Department"].unique().tolist())
     selected_department = st.sidebar.selectbox("Filter by Department", departments)
     
-    # Get unique metric types across the dataset
-    unique_metrics = sorted(df["Metric_Name"].unique().tolist())
-    metric_types = ["All Metrics"] + unique_metrics
-    selected_metric = st.sidebar.selectbox("Filter by Metric Type", metric_types)
-    
-    # Filter data based on selection - apply department filter first
+    # Filter data based on department selection
     filtered_df = df.copy()
     if selected_department != "All Departments":
         filtered_df = filtered_df[filtered_df["Department"] == selected_department]
-    
-    # Then apply metric type filter if selected
-    if selected_metric != "All Metrics":
-        filtered_df = filtered_df[filtered_df["Metric_Name"] == selected_metric]
         
-    # Show filter status
-    if selected_department != "All Departments" or selected_metric != "All Metrics":
-        filter_status = []
-        if selected_department != "All Departments":
-            filter_status.append(f"Department: {selected_department}")
-        if selected_metric != "All Metrics":
-            filter_status.append(f"Metric: {selected_metric}")
-        
-        st.sidebar.info(f"Filtering by: {', '.join(filter_status)}")
+        # Show filter status
+        st.sidebar.info(f"Filtering by Department: {selected_department}")
         if len(filtered_df) == 0:
             st.sidebar.warning("No metrics match your filter criteria. Try adjusting filters.")
         else:
