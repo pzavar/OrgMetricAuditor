@@ -350,11 +350,11 @@ if df is not None:
         ### Strategic Implications
         
         1. **Measurement Efficiency Gap:** {"A critical" if high_impact_pct < 0.3 else "A significant" if high_impact_pct < 0.5 else "A"} 
-           proportion of metrics ({vanity_pct:.0%}) are not driving organizational value, creating opportunity costs 
+           proportion of metrics ({vanity} of {total_metrics}) are not driving organizational value, creating opportunity costs 
            through unnecessary reporting and analysis efforts.
         
-        2. **Decision Support Effectiveness:** Only {high_impact_pct:.0%} of your metrics directly inform decision-making, 
-           {"substantially below" if high_impact_pct < 0.3 else "below" if high_impact_pct < 0.5 else "near"} industry benchmark of 45-55% 
+        2. **Decision Support Effectiveness:** Only {high_impact} of your {total_metrics} metrics directly inform decision-making, 
+           {"substantially below" if high_impact_pct < 0.3 else "below" if high_impact_pct < 0.5 else "near"} industry benchmark 
            for high-performing organizations.
         
         3. **Organizational Alignment:** {"Significant" if duplicate_count > 5 else "Some" if duplicate_count > 0 else "No"} metric duplication 
@@ -384,12 +384,12 @@ if df is not None:
             
             # Display high-impact metrics with detailed consulting analysis
             for idx, row in top_metrics_df.iterrows():
-                with st.expander(f"{row['Department']} - {row['Metric_Name']} ({row['Score']:.0%})"):
+                with st.expander(f"{row['Department']} - {row['Metric_Name']} (Score: {row['Score']*10:.1f}/10)"):
                     col1, col2 = st.columns([2, 1])
                     
                     with col1:
                         st.markdown(f"**Department:** {row['Department']}")
-                        st.markdown(f"**Value Score:** {row['Score']:.0%}")
+                        st.markdown(f"**Value Score:** {(row['Score']*10):.1f}/10")
                         
                         # Generate justification based on data with more consultant language
                         justifications = []
@@ -502,12 +502,12 @@ if df is not None:
             
             # Display top vanity metrics with consultant-style justification
             for idx, row in vanity_metrics_df.iterrows():
-                with st.expander(f"{row['Department']} - {row['Metric_Name']} ({row['Score']:.0%})"):
+                with st.expander(f"{row['Department']} - {row['Metric_Name']} (Score: {row['Score']*10:.1f}/10)"):
                     col1, col2 = st.columns([2, 1])
                     
                     with col1:
                         st.markdown(f"**Department:** {row['Department']}")
-                        st.markdown(f"**Value Score:** {row['Score']:.0%}")
+                        st.markdown(f"**Value Score:** {(row['Score']*10):.1f}/10")
                         
                         # Generate justification based on data with consulting terminology
                         reasons = []
