@@ -1,30 +1,21 @@
+# KPI Audit Tool
 
-# KPI Audit Tool 📊
+A data-driven tool that analyzes organizational metrics to identify high-value KPIs and eliminate vanity metrics.
 
-A sophisticated data-driven tool built with Python, Streamlit, and Plotly that helps organizations identify high-value KPIs and eliminate vanity metrics through automated scoring algorithms and interactive visualizations.
+## What it Does
 
-## Overview
+- Analyzes metrics across departments
+- Identifies which metrics drive real decisions vs vanity metrics
+- Provides interactive visualizations and scoring
+- Helps reduce wasted effort on tracking meaningless data
 
-The KPI Audit Tool analyzes your organization's metrics to identify which ones drive real business decisions and which ones might be consuming resources without providing proportionate value. It uses a multi-factor analysis approach developed for enterprise organizations to evaluate and classify metrics.
+## Using the Tool
 
-![KPI Analysis Dashboard](attached_assets/image_1745950078757.png)
-
-## Key Features
-
-- **Automated Metric Classification**: Sophisticated algorithm to identify high-impact vs. vanity metrics
-- **Interactive Visualizations**: Rich, interactive charts powered by Plotly
-- **Department-Level Analysis**: Cross-functional metric analysis to identify silos and redundancies
-- **Value Factor Analysis**: Multi-dimensional scoring based on actual usage, decision-making impact, and review frequency
-- **Actionable Insights**: Clear recommendations for metric optimization
-- **Data Export**: Export analysis results in CSV or Excel format
-
-## Getting Started
-
-1. Upload your metrics data via CSV or use the sample dataset
-2. View the automated analysis across three tabs:
-   - Analysis: Detailed metric evaluation and recommendations
-   - Visualizations: Interactive charts and graphs
-   - Metrics Details: Granular metric-level insights
+1. Upload your metrics CSV or use sample data
+2. View analysis across:
+   - Interactive metric scoring dashboard
+   - Department-level breakdowns  
+   - Individual metric deep-dives
 
 ## Data Format
 
@@ -35,6 +26,16 @@ Department,Metric_Name,Visible_in_Dashboard,Used_in_Decision_Making,Executive_Re
 ```
 
 Sample templates are available in the tool for both full and minimal datasets.
+
+## Key Features
+
+- **Automated Metric Classification**: Sophisticated algorithm to identify high-impact vs. vanity metrics
+- **Interactive Visualizations**: Rich, interactive charts powered by Plotly
+- **Department-Level Analysis**: Cross-functional metric analysis to identify silos and redundancies
+- **Value Factor Analysis**: Multi-dimensional scoring based on actual usage, decision-making impact, and review frequency
+- **Actionable Insights**: Clear recommendations for metric optimization
+- **Data Export**: Export analysis results in CSV or Excel format
+
 
 ## Key Components
 
