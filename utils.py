@@ -2,8 +2,73 @@ import pandas as pd
 import numpy as np
 import io
 
+def validate_csv_format(df):
+    """
+    Validate that a DataFrame has the required columns and format.
+    
+    Args:
+        df: The pandas DataFrame to validate
+        
+    Returns:
+        tuple: (is_valid, error_message)
+    """
+    # Required columns
+    required_columns = [
+        'Department',
+        'Metric_Name',
+        'Visible_in_Dashboard',
+        'Used_in_Decision_Making',
+        'Executive_Requested',
+        'Last_Reviewed',
+        'Metric_Last_Used_For_Decision',
+        'Interpretation_Notes'
+    ]
+    
+    # Check for missing columns
+    missing_columns = [col for col in required_columns if col not in df.columns]
+    if missing_columns:
+        return False, f"Missing required columns: {', '.join(missing_columns)}"
+    
+    # Check for Boolean columns format
+    bool_columns = ['Visible_in_Dashboard', 'Used_in_Decision_Making', 'Executive_Requested']
+    for col in bool_columns:
+        invalid_values = df[col][~df[col].isin(['Yes', 'No'])].unique()
+        if len(invalid_values) > 0:
+            return False, f"Column '{col}' contains invalid values. Only 'Yes' or 'No' are allowed. Found: {list(invalid_values)}"
+    
+    # Check for Last_Reviewed valid values
+    review_values = ['This week', 'Last month', 'Last quarter', 'Unknown']
+    invalid_reviews = df['Last_Reviewed'][~df['Last_Reviewed'].isin(review_values)].unique()
+    if len(invalid_reviews) > 0:
+        return False, f"Column 'Last_Reviewed' contains invalid values. Expected values: {review_values}. Found: {list(invalid_reviews)}"
+    
+    # Check for Last_Used valid values
+    usage_values = ['Recently', '2 weeks ago', 'Last quarter', 'Used in QBR', 'Never', "Don't know"]
+    invalid_usage = df['Metric_Last_Used_For_Decision'][~df['Metric_Last_Used_For_Decision'].isin(usage_values)].unique()
+    if len(invalid_usage) > 0:
+        return False, f"Column 'Metric_Last_Used_For_Decision' contains invalid values. Expected values: {usage_values}. Found: {list(invalid_usage)}"
+    
+    # All validations passed
+    return True, ""
+
 def preprocess_data(df):
-    """Preprocess the input data for analysis."""
+    """
+    Preprocess the input data for analysis.
+    
+    Args:
+        df: DataFrame to preprocess
+        
+    Returns:
+        processed DataFrame
+    
+    Raises:
+        ValueError: If the DataFrame doesn't have the required format
+    """
+    # Validate format first
+    is_valid, error_message = validate_csv_format(df)
+    if not is_valid:
+        raise ValueError(error_message)
+    
     # Make a copy to avoid modifying the original
     processed_df = df.copy()
     
@@ -34,18 +99,17 @@ def preprocess_data(df):
     
     # Score for interpretation notes (whether it's tied to real goals)
     processed_df['Notes_Score'] = processed_df['Interpretation_Notes'].apply(
-        lambda x: 4 if 'real goals' in x.lower() else
-                  3 if 'auto-synced' in x.lower() else
-                  2 if 'frequently discussed' in x.lower() or 'updated manually' in x.lower() else
-                  1 if 'vanity' in x.lower() or 'optics' in x.lower() else 2
+        lambda x: 4 if 'real goals' in str(x).lower() else
+                  3 if 'auto-synced' in str(x).lower() else
+                  2 if 'frequently discussed' in str(x).lower() or 'updated manually' in str(x).lower() else
+                  1 if 'vanity' in str(x).lower() or 'optics' in str(x).lower() else 2
     )
     
     return processed_df
 
-def load_sample_data():
-    """Load the sample data from the predefined CSV content."""
-    # CSV content from the provided data
-    csv_content = """Department,Metric_Name,Visible_in_Dashboard,Used_in_Decision_Making,Executive_Requested,Last_Reviewed,Metric_Last_Used_For_Decision,Interpretation_Notes
+def get_sample_csv_content():
+    """Return the sample CSV content as a string."""
+    return """Department,Metric_Name,Visible_in_Dashboard,Used_in_Decision_Making,Executive_Requested,Last_Reviewed,Metric_Last_Used_For_Decision,Interpretation_Notes
 Marketing,OKR Progress,No,No,No,This week,2 weeks ago,Drives vanity OKRs
 Finance,Leads Generated,Yes,No,No,Last month,Used in QBR,Tied to real goals
 Engineering,OKR Progress,Yes,Yes,Yes,Last month,Recently,Auto-synced from tool
@@ -106,6 +170,11 @@ Product,Leads Generated,No,No,Yes,Unknown,Last quarter,Auto-synced from tool
 Product,Time on Site,No,Yes,No,Last month,Never,Often misinterpreted
 Engineering,Demo Requests,No,No,No,Last month,Last quarter,Auto-synced from tool
 Finance,Demo Requests,Yes,No,No,Last quarter,Don't know,Frequently discussed"""
+
+def load_sample_data():
+    """Load the sample data from the predefined CSV content."""
+    # Get the CSV content
+    csv_content = get_sample_csv_content()
     
     # Load CSV content into a DataFrame
     df = pd.read_csv(io.StringIO(csv_content))

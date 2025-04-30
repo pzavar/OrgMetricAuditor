@@ -45,6 +45,50 @@ upload_option = st.sidebar.radio(
     ["Use sample data", "Upload CSV file"]
 )
 
+# Template download section
+if upload_option == "Upload CSV file":
+    st.sidebar.markdown("### CSV Template")
+    csv_template = get_sample_csv_content()
+    
+    col1, col2 = st.sidebar.columns(2)
+    
+    # Download template with full sample data
+    col1.download_button(
+        label="Download Template",
+        data=csv_template,
+        file_name="metrics_template.csv",
+        mime="text/csv",
+        help="Download a CSV template with sample data that matches the required format"
+    )
+    
+    # Download minimal template with just headers and a few rows
+    minimal_template = """Department,Metric_Name,Visible_in_Dashboard,Used_in_Decision_Making,Executive_Requested,Last_Reviewed,Metric_Last_Used_For_Decision,Interpretation_Notes
+Marketing,Example Metric,Yes,No,No,This week,Recently,Add your notes here
+Finance,Another Metric,No,Yes,Yes,Last month,2 weeks ago,Add your notes here"""
+    
+    col2.download_button(
+        label="Empty Template",
+        data=minimal_template,
+        file_name="empty_template.csv",
+        mime="text/csv",
+        help="Download an empty CSV template with just the required columns"
+    )
+    
+    # Format requirements explanation
+    with st.sidebar.expander("CSV Format Requirements", expanded=False):
+        st.markdown("""
+        Your CSV file must include these columns:
+        
+        1. **Department**: Your department name
+        2. **Metric_Name**: Name of the metric/KPI
+        3. **Visible_in_Dashboard**: Must be 'Yes' or 'No'
+        4. **Used_in_Decision_Making**: Must be 'Yes' or 'No'
+        5. **Executive_Requested**: Must be 'Yes' or 'No'
+        6. **Last_Reviewed**: Must be one of: 'This week', 'Last month', 'Last quarter', 'Unknown'
+        7. **Metric_Last_Used_For_Decision**: Must be one of: 'Recently', '2 weeks ago', 'Last quarter', 'Used in QBR', 'Never', 'Don't know'
+        8. **Interpretation_Notes**: Free text field for additional context
+        """)
+
 # Initialize df variable
 df = None
 
@@ -54,10 +98,22 @@ if upload_option == "Upload CSV file":
         try:
             # Read and process the uploaded file
             content = uploaded_file.getvalue().decode('utf-8')
-            df = pd.read_csv(StringIO(content))
-            df = preprocess_data(df)
+            raw_df = pd.read_csv(StringIO(content))
+            
+            # Check basic format before processing
+            is_valid, error_message = validate_csv_format(raw_df)
+            
+            if is_valid:
+                df = preprocess_data(raw_df)
+                st.sidebar.success(f"Successfully loaded {len(df)} metrics from your file")
+            else:
+                st.sidebar.error(f"Invalid CSV format: {error_message}")
+                st.sidebar.info("Using sample data instead. Please fix your CSV and re-upload.")
+                df = load_sample_data()
+                
         except Exception as e:
-            st.sidebar.error(f"Error loading file: {e}")
+            st.sidebar.error(f"Error processing file: {str(e)}")
+            st.sidebar.info("Using sample data instead. Please check the format requirements and try again.")
             # Fall back to sample data
             df = load_sample_data()
     else:
