@@ -296,8 +296,8 @@ if df is not None:
         
         # Create a metrics summary counter at the top
         col1, col2 = st.columns(2)
-        col1.metric("High Impact Metrics", high_impact, delta=None)
-        col2.metric("Vanity Metrics", vanity, delta=None)
+        col1.metric("High Impact Metrics", high_impact)
+        col2.metric("Vanity Metrics", vanity)
         
         st.markdown("---")
         
