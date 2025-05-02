@@ -240,14 +240,14 @@ def create_metric_value_factors(metric_data):
 
 def create_top_metrics_table(df, top_n=5):
     """
-    Create a styled DataFrame for the top metrics to be displayed with Streamlit.
+    Create a styled HTML table for the top metrics.
     
     Args:
         df: DataFrame with the top metrics
         top_n: Number of top metrics to show
     
     Returns:
-        Processed DataFrame ready for display
+        HTML for styled table
     """
     # Limit to top N rows
     df = df.head(top_n)
@@ -259,7 +259,42 @@ def create_top_metrics_table(df, top_n=5):
     # Format the score on a 0-10 scale
     display_df["Value Score"] = (display_df["Value Score"] * 10).round(1).map("{:.1f}/10".format)
     
-    return display_df
+    # Convert to HTML with styling
+    html = display_df.to_html(
+        index=False,
+        classes=["table", "table-striped", "table-hover"],
+        border=0
+    )
+    
+    # Add custom CSS
+    styled_html = f"""
+    <style>
+    table {{
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 16px;
+    }}
+    th {{
+        background-color: #2c3e50;
+        color: white;
+        text-align: left;
+        padding: 12px;
+    }}
+    td {{
+        padding: 10px;
+        border-bottom: 1px solid #ddd;
+    }}
+    tr:nth-child(even) {{
+        background-color: #f8f9fa;
+    }}
+    tr:hover {{
+        background-color: #e9ecef;
+    }}
+    </style>
+    {html}
+    """
+    
+    return styled_html
 
 def get_color_for_classification(classification, alpha=1.0):
     """Get color for a classification category."""

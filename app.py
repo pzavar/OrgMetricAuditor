@@ -729,8 +729,7 @@ if df is not None:
         # High Impact Metrics Table
         st.subheader("High Impact Metrics")
         if len(top_metrics_df) > 0:
-            metrics_display_df = create_top_metrics_table(top_metrics_df)
-            st.dataframe(metrics_display_df, use_container_width=True)
+            st.markdown(create_top_metrics_table(top_metrics_df), unsafe_allow_html=True)
         else:
             st.info("No high-impact metrics identified based on current filters and threshold.")
         
@@ -740,7 +739,7 @@ if df is not None:
             vanity_table = vanity_metrics_df[["Department", "Metric_Name", "Score", "Interpretation_Notes"]].copy()
             vanity_table.columns = ["Department", "Metric", "Value Score", "Notes"]
             # Convert score to 0-10 scale instead of percentage
-            vanity_table["Value Score"] = (vanity_table["Value Score"] * 10).round(1).map("{:.1f}/10".format)
+            vanity_table["Value Score"] = (vanity_table["Value Score"] * 10).round(1)
             
             st.dataframe(vanity_table, use_container_width=True)
         else:
