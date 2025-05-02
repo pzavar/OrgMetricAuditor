@@ -64,7 +64,7 @@ def create_key_metrics_breakdown(df):
         font=dict(size=14, color="#333333"),
         height=360,
         width=400,
-        margin=dict(l=10, r=40, t=40, b=80),
+        margin=dict(l=10, r=40, t=40, b=120),
         title_font=dict(color="black", size=16, family="Arial"),
     )
     
@@ -80,7 +80,7 @@ def create_key_metrics_breakdown(df):
         title_font=dict(size=14, color="#333333")
     )
     
-    # Make legend more visible and descriptive and place it below the chart
+    # Make legend more visible and descriptive and place it completely below the chart
     fig.update_layout(
         legend=dict(
             title=dict(
@@ -89,7 +89,7 @@ def create_key_metrics_breakdown(df):
             ),
             orientation="h",
             yanchor="top",
-            y=-0.15,
+            y=-0.4,  # Position much further down
             xanchor="center",
             x=0.5,
             bgcolor="rgba(240, 240, 240, 0.95)",
@@ -155,9 +155,9 @@ def create_metrics_by_department(df):
         height=360,
         width=400,
         bargap=0.2,
-        margin=dict(l=10, r=40, t=40, b=80),
+        margin=dict(l=10, r=40, t=40, b=120),
         title_font=dict(color="black", size=16, family="Arial"),
-        # Make legend more visible and descriptive and place it below the chart
+        # Make legend more visible and descriptive and place it completely below the chart
         legend=dict(
             title=dict(
                 text="Metric Classification:",
@@ -165,7 +165,7 @@ def create_metrics_by_department(df):
             ),
             orientation="h",
             yanchor="top",
-            y=-0.15,
+            y=-0.4,  # Position much further down
             xanchor="center",
             x=0.5,
             bgcolor="rgba(240, 240, 240, 0.95)",
