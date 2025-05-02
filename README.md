@@ -2,7 +2,7 @@
 
 A data-driven tool that analyzes organizational metrics to identify high-value KPIs and eliminate vanity metrics.
 
-**Live demo**: [https://metric-auditor.streamlit.app/](https://metric-auditor.streamlit.app/)
+**Website URL**: [https://metric-auditor.streamlit.app/](https://metric-auditor.streamlit.app/)
 
 ## What it Does
 

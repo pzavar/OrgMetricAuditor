@@ -56,7 +56,7 @@ def create_key_metrics_breakdown(df):
         plot_bgcolor='rgba(240, 240, 240, 0.9)',
         paper_bgcolor='white',
         font=dict(size=14, color="#333333"),
-        height=300,
+        height=400,  # Increased height to match the department chart
         margin=dict(l=10, r=40, t=40, b=10),
     )
     
@@ -119,6 +119,7 @@ def create_metrics_by_department(df):
         plot_bgcolor='rgba(240, 240, 240, 0.9)',
         paper_bgcolor='white',
         font=dict(size=14, color="#333333"),
+        height=400,  # Set fixed height to match the classification chart
         bargap=0.2,
         margin=dict(l=10, r=10, t=40, b=10),
     )
