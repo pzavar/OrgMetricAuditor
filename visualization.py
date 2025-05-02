@@ -64,7 +64,7 @@ def create_key_metrics_breakdown(df):
         font=dict(size=14, color="#333333"),
         height=360,
         width=400,
-        margin=dict(l=10, r=40, t=40, b=30),
+        margin=dict(l=10, r=40, t=60, b=30),
         title_font=dict(color="black", size=16, family="Arial"),
     )
     
@@ -89,14 +89,16 @@ def create_key_metrics_breakdown(df):
             ),
             orientation="h",
             yanchor="bottom",
-            y=1.02,
-            xanchor="right",
-            x=1,
+            y=1.15,
+            xanchor="left",
+            x=0,
             bgcolor="rgba(240, 240, 240, 0.95)",
             bordercolor="rgba(0, 0, 0, 0.5)",
             borderwidth=1,
             font=dict(size=14, color="black", family="Arial"),
-            itemsizing="constant"
+            itemsizing="constant",
+            # Ensure items are spaced properly
+            itemwidth=40
         )
     )
     
@@ -153,7 +155,7 @@ def create_metrics_by_department(df):
         height=360,
         width=400,
         bargap=0.2,
-        margin=dict(l=10, r=40, t=40, b=30),
+        margin=dict(l=10, r=40, t=60, b=30),
         title_font=dict(color="black", size=16, family="Arial"),
         # Make legend more visible and descriptive
         legend=dict(
@@ -163,14 +165,16 @@ def create_metrics_by_department(df):
             ),
             orientation="h",
             yanchor="bottom",
-            y=1.02,
-            xanchor="right",
-            x=1,
+            y=1.15,
+            xanchor="left",
+            x=0,
             bgcolor="rgba(240, 240, 240, 0.95)",
             bordercolor="rgba(0, 0, 0, 0.5)",
             borderwidth=1,
             font=dict(size=14, color="black", family="Arial"),
-            itemsizing="constant"
+            itemsizing="constant",
+            # Ensure items are spaced properly
+            itemwidth=40
         ),
     )
     
