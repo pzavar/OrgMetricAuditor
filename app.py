@@ -790,44 +790,20 @@ if df is not None:
             # Option to download results
             st.subheader("Export Results")
             
-            col1, col2 = st.columns([1, 3])
-            export_format = col1.selectbox("Export format:", ["CSV", "Excel"])
-            
-            if col2.button("Export Analysis"):
+            if st.button("Export Analysis"):
                 # Prepare export dataframe
                 export_df = analysis_df[["Department", "Metric_Name", "Visible_in_Dashboard", 
                                        "Used_in_Decision_Making", "Executive_Requested", 
                                        "Last_Reviewed", "Metric_Last_Used_For_Decision",
                                        "Score", "Classification", "Interpretation_Notes"]]
                 
-                if export_format == "CSV":
-                    csv = export_df.to_csv(index=False)
-                    st.download_button(
-                        label="Download CSV",
-                        data=csv,
-                        file_name="kpi_audit_results.csv",
-                        mime="text/csv",
-                    )
-                else:  # Excel
-                    # For Excel, we use a workaround with BytesIO since Streamlit doesn't directly support Excel
-                    import io
-                    buffer = io.BytesIO()
-                    with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
-                        export_df.to_excel(writer, sheet_name='KPI Audit', index=False)
-                        # Get the workbook and add some formatting
-                        workbook = writer.book
-                        worksheet = writer.sheets['KPI Audit']
-                        format_header = workbook.add_format({'bold': True, 'bg_color': '#D9E1F2', 'border': 1})
-                        for col_num, value in enumerate(export_df.columns.values):
-                            worksheet.write(0, col_num, value, format_header)
-                        worksheet.set_column(0, len(export_df.columns)-1, 15)
-                    
-                    st.download_button(
-                        label="Download Excel",
-                        data=buffer.getvalue(),
-                        file_name="kpi_audit_results.xlsx",
-                        mime="application/vnd.ms-excel",
-                    )
+                csv = export_df.to_csv(index=False)
+                st.download_button(
+                    label="Download CSV",
+                    data=csv,
+                    file_name="kpi_audit_results.csv",
+                    mime="text/csv",
+                )
             
         else:  # Analyze individual metric
             # Interactive metric selection and analysis
