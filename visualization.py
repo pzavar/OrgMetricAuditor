@@ -24,13 +24,18 @@ def create_key_metrics_breakdown(df):
         x="Count",
         color="Classification",
         color_discrete_map={
-            "High Impact": "#27ae60",
-            "Vanity": "#e74c3c"
+            "High Impact": "#27ae60",  # Green for high impact
+            "Vanity": "#e74c3c"       # Red for vanity
         },
         title="Metric Classification Distribution",
         orientation='h',
         text="Count",
-        labels={"Classification": "Metric Classification"}
+        labels={
+            "Classification": "Metric Classification", 
+            "Count": "Number of Metrics",
+            "x": "Number of Metrics"
+        },
+        category_orders={"Classification": ["High Impact", "Vanity"]}
     )
     
     # Add count labels
@@ -77,16 +82,20 @@ def create_key_metrics_breakdown(df):
     # Make legend more visible and descriptive
     fig.update_layout(
         legend=dict(
-            title="Metric Types:",
+            title=dict(
+                text="Metric Classification:",
+                font=dict(color="black", size=14, family="Arial Bold")
+            ),
             orientation="h",
             yanchor="bottom",
             y=1.02,
             xanchor="right",
             x=1,
-            bgcolor="rgba(255, 255, 255, 0.8)",
-            bordercolor="rgba(0, 0, 0, 0.2)",
+            bgcolor="rgba(240, 240, 240, 0.95)",
+            bordercolor="rgba(0, 0, 0, 0.5)",
             borderwidth=1,
-            font=dict(size=12)
+            font=dict(size=14, color="black", family="Arial"),
+            itemsizing="constant"
         )
     )
     
@@ -119,13 +128,18 @@ def create_metrics_by_department(df):
         x="Count",
         color="Classification",
         color_discrete_map={
-            "High Impact": "#27ae60", 
-            "Vanity": "#e74c3c"
+            "High Impact": "#27ae60",  # Green for high impact metrics 
+            "Vanity": "#e74c3c"       # Red for vanity metrics
         },
         title="Metrics by Department",
         orientation='h',
         text="Count",
-        labels={"Classification": "Metric Classification"}
+        labels={
+            "Classification": "Metric Classification", 
+            "Count": "Number of Metrics",
+            "x": "Number of Metrics"
+        },
+        category_orders={"Classification": ["High Impact", "Vanity"]}
     )
     
     # Customize appearance
@@ -141,16 +155,20 @@ def create_metrics_by_department(df):
         margin=dict(l=10, r=40, t=40, b=30),
         # Make legend more visible and descriptive
         legend=dict(
-            title="Metric Types:",
+            title=dict(
+                text="Metric Classification:",
+                font=dict(color="black", size=14, family="Arial Bold")
+            ),
             orientation="h",
             yanchor="bottom",
             y=1.02,
             xanchor="right",
             x=1,
-            bgcolor="rgba(255, 255, 255, 0.8)",
-            bordercolor="rgba(0, 0, 0, 0.2)",
+            bgcolor="rgba(240, 240, 240, 0.95)",
+            bordercolor="rgba(0, 0, 0, 0.5)",
             borderwidth=1,
-            font=dict(size=12)
+            font=dict(size=14, color="black", family="Arial"),
+            itemsizing="constant"
         ),
     )
     
