@@ -29,7 +29,8 @@ def create_key_metrics_breakdown(df):
         },
         title="Metric Classification Distribution",
         orientation='h',
-        text="Count"
+        text="Count",
+        labels={"Classification": "Metric Classification"}
     )
     
     # Add count labels
@@ -56,8 +57,9 @@ def create_key_metrics_breakdown(df):
         plot_bgcolor='rgba(240, 240, 240, 0.9)',
         paper_bgcolor='white',
         font=dict(size=14, color="#333333"),
-        height=300,
-        margin=dict(l=10, r=40, t=40, b=10),
+        height=360,
+        width=400,
+        margin=dict(l=10, r=40, t=40, b=30),
     )
     
     # Ensure y-axis labels are clearly visible
@@ -72,8 +74,21 @@ def create_key_metrics_breakdown(df):
         title_font=dict(size=14, color="#333333")
     )
     
-    # Remove legends since colors are self-explanatory
-    fig.update_layout(showlegend=False)
+    # Make legend more visible and descriptive
+    fig.update_layout(
+        legend=dict(
+            title="Metric Types:",
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1,
+            bgcolor="rgba(255, 255, 255, 0.8)",
+            bordercolor="rgba(0, 0, 0, 0.2)",
+            borderwidth=1,
+            font=dict(size=12)
+        )
+    )
     
     # Format the text with better contrast
     fig.update_traces(
@@ -109,7 +124,8 @@ def create_metrics_by_department(df):
         },
         title="Metrics by Department",
         orientation='h',
-        text="Count"
+        text="Count",
+        labels={"Classification": "Metric Classification"}
     )
     
     # Customize appearance
@@ -119,8 +135,23 @@ def create_metrics_by_department(df):
         plot_bgcolor='rgba(240, 240, 240, 0.9)',
         paper_bgcolor='white',
         font=dict(size=14, color="#333333"),
+        height=360,
+        width=400,
         bargap=0.2,
-        margin=dict(l=10, r=10, t=40, b=10),
+        margin=dict(l=10, r=40, t=40, b=30),
+        # Make legend more visible and descriptive
+        legend=dict(
+            title="Metric Types:",
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1,
+            bgcolor="rgba(255, 255, 255, 0.8)",
+            bordercolor="rgba(0, 0, 0, 0.2)",
+            borderwidth=1,
+            font=dict(size=12)
+        ),
     )
     
     # Ensure y-axis labels are clearly visible

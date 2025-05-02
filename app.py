@@ -713,18 +713,20 @@ if df is not None:
         st.header("Metric Visualizations")
         
         st.subheader("Metrics Classification Overview")
-        # Create two columns for the visualizations
-        viz_col1, viz_col2 = st.columns(2)
+        # Create two columns for the visualizations with equal width
+        viz_col1, viz_col2 = st.columns([1, 1])
         
         with viz_col1:
             # Classification Breakdown Visualization
             fig1 = create_key_metrics_breakdown(analysis_df)
-            st.plotly_chart(fig1, use_container_width=True)
+            # Use fixed height and width instead of container width
+            st.plotly_chart(fig1, use_container_width=False)
         
         with viz_col2:
             # Department Metrics Visualization
             fig2 = create_metrics_by_department(analysis_df)
-            st.plotly_chart(fig2, use_container_width=True)
+            # Use fixed height and width instead of container width
+            st.plotly_chart(fig2, use_container_width=False)
         
         # High Impact Metrics Table
         st.subheader("High Impact Metrics")
