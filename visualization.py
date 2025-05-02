@@ -64,7 +64,7 @@ def create_key_metrics_breakdown(df):
         font=dict(size=14, color="#333333"),
         height=360,
         width=400,
-        margin=dict(l=10, r=40, t=60, b=30),
+        margin=dict(l=10, r=40, t=40, b=80),
         title_font=dict(color="black", size=16, family="Arial"),
     )
     
@@ -80,7 +80,7 @@ def create_key_metrics_breakdown(df):
         title_font=dict(size=14, color="#333333")
     )
     
-    # Make legend more visible and descriptive
+    # Make legend more visible and descriptive and place it below the chart
     fig.update_layout(
         legend=dict(
             title=dict(
@@ -88,10 +88,10 @@ def create_key_metrics_breakdown(df):
                 font=dict(color="black", size=14, family="Arial Bold")
             ),
             orientation="h",
-            yanchor="bottom",
-            y=1.15,
-            xanchor="left",
-            x=0,
+            yanchor="top",
+            y=-0.15,
+            xanchor="center",
+            x=0.5,
             bgcolor="rgba(240, 240, 240, 0.95)",
             bordercolor="rgba(0, 0, 0, 0.5)",
             borderwidth=1,
@@ -155,19 +155,19 @@ def create_metrics_by_department(df):
         height=360,
         width=400,
         bargap=0.2,
-        margin=dict(l=10, r=40, t=60, b=30),
+        margin=dict(l=10, r=40, t=40, b=80),
         title_font=dict(color="black", size=16, family="Arial"),
-        # Make legend more visible and descriptive
+        # Make legend more visible and descriptive and place it below the chart
         legend=dict(
             title=dict(
                 text="Metric Classification:",
                 font=dict(color="black", size=14, family="Arial Bold")
             ),
             orientation="h",
-            yanchor="bottom",
-            y=1.15,
-            xanchor="left",
-            x=0,
+            yanchor="top",
+            y=-0.15,
+            xanchor="center",
+            x=0.5,
             bgcolor="rgba(240, 240, 240, 0.95)",
             bordercolor="rgba(0, 0, 0, 0.5)",
             borderwidth=1,
@@ -263,7 +263,7 @@ def create_metric_value_factors(metric_data):
         paper_bgcolor='white',
         font=dict(size=14, color="#333333"),
         height=400,
-        margin=dict(l=10, r=10, t=40, b=10),
+        margin=dict(l=10, r=10, t=40, b=40),
         title_font=dict(size=16, color="#333333")
     )
     
