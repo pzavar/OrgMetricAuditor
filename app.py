@@ -729,7 +729,13 @@ if df is not None:
         # High Impact Metrics Table
         st.subheader("High Impact Metrics")
         if len(top_metrics_df) > 0:
-            st.markdown(create_top_metrics_table(top_metrics_df), unsafe_allow_html=True)
+            # Create a more consistent table display
+            high_impact_table = top_metrics_df[["Department", "Metric_Name", "Score"]].copy()
+            high_impact_table.columns = ["Department", "Metric", "Value Score"]
+            # Format score on 0-10 scale
+            high_impact_table["Value Score"] = (high_impact_table["Value Score"] * 10).round(1)
+            # Use dataframe display instead of HTML
+            st.dataframe(high_impact_table, use_container_width=True)
         else:
             st.info("No high-impact metrics identified based on current filters and threshold.")
         
