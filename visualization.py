@@ -65,6 +65,7 @@ def create_key_metrics_breakdown(df):
         height=360,
         width=400,
         margin=dict(l=10, r=40, t=40, b=30),
+        title_font=dict(color="black", size=16, family="Arial"),
     )
     
     # Ensure y-axis labels are clearly visible
@@ -153,6 +154,7 @@ def create_metrics_by_department(df):
         width=400,
         bargap=0.2,
         margin=dict(l=10, r=40, t=40, b=30),
+        title_font=dict(color="black", size=16, family="Arial"),
         # Make legend more visible and descriptive
         legend=dict(
             title=dict(
