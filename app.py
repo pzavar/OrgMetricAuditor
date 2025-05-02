@@ -811,16 +811,37 @@ if df is not None:
                 else:  # Excel
                     # For Excel, we use a workaround with BytesIO since Streamlit doesn't directly support Excel
                     import io
+                    import xlsxwriter
                     buffer = io.BytesIO()
-                    with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
-                        export_df.to_excel(writer, sheet_name='KPI Audit', index=False)
-                        # Get the workbook and add some formatting
-                        workbook = writer.book
-                        worksheet = writer.sheets['KPI Audit']
-                        format_header = workbook.add_format({'bold': True, 'bg_color': '#D9E1F2', 'border': 1})
-                        for col_num, value in enumerate(export_df.columns.values):
-                            worksheet.write(0, col_num, value, format_header)
-                        worksheet.set_column(0, len(export_df.columns)-1, 15)
+                    
+                    # Create a workbook and add a worksheet
+                    workbook = xlsxwriter.Workbook(buffer)
+                    worksheet = workbook.add_worksheet('KPI Audit')
+                    
+                    # Add formatting
+                    header_format = workbook.add_format({
+                        'bold': True,
+                        'bg_color': '#D9E1F2',
+                        'border': 1
+                    })
+                    
+                    # Write headers with formatting
+                    for col_num, column in enumerate(export_df.columns):
+                        worksheet.write(0, col_num, column, header_format)
+                    
+                    # Write data
+                    for row_num, row in enumerate(export_df.values):
+                        for col_num, cell_value in enumerate(row):
+                            worksheet.write(row_num + 1, col_num, cell_value)
+                    
+                    # Set column width
+                    worksheet.set_column(0, len(export_df.columns)-1, 15)
+                    
+                    # Close the workbook to write to the buffer
+                    workbook.close()
+                    
+                    # Reset buffer position to beginning
+                    buffer.seek(0)
                     
                     st.download_button(
                         label="Download Excel",
